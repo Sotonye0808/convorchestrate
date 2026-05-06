@@ -1,24 +1,32 @@
-version: '3.9'
+version: "3.9"
 services:
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: convorchestrate
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
   redis:
-    image: redis:7
+    image: redis:7-alpine
     restart: unless-stopped
     ports:
       - "6379:6379"
 
   api:
-    build: ../
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.api
     restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@postgres:5432/convorchestrate
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
     ports:
       - "3000:3000"
     depends_on:
@@ -26,10 +34,25 @@ services:
       - redis
 
   worker:
-    build: ../
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.worker
     restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@postgres:5432/convorchestrate
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
     depends_on:
+      - postgres
       - redis
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.dashboard
+    restart: unless-stopped
+    ports:
+      - "5173:80"
 
 volumes:
   postgres_data:

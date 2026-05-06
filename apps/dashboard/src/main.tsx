@@ -1,12 +1,16 @@
+import "./index.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
 
 function App() {
-  return React.createElement(
-    "div",
-    null,
-    "Convorchestrate Dashboard (scaffold)",
+  return (
+    <div className="p-6 text-lg">
+      Convorchestrate Dashboard (scaffold)
+    </div>
   );
 }
 
-createRoot(document.getElementById("root")!).render(React.createElement(App));
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  createRoot(rootElement).render(<App />);
+}

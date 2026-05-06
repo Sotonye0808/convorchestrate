@@ -45,3 +45,23 @@ Finish Phase 0: align scaffold, add entities, migrations, and run build.
 **Notes / Blockers:**
 None.
 
+
+## Session 3 - 2026-05-06
+
+**Completed:**
+Phase 0 scaffold reconciliation and build success.
+
+**Files Modified:**
+- package.json - workspace deps and scripts
+- apps/api/src/* - app module, entities, data source, migration
+- apps/worker/src/* - worker module and entrypoint
+- apps/dashboard/* - Vite and Tailwind config
+- infrastructure/docker-compose.yml - full service stack
+- infrastructure/docker/* - Dockerfiles
+- .env.example - environment template
+
+**Next Task:**
+Start Phase 1: workflow schema and engine core.
+
+**Notes / Blockers:**
+Removed BullMQ deps from worker for Phase 0; add in Phase 5.
