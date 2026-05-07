@@ -1,0 +1,29 @@
+{
+  "workflow_id": "marketplace_mediation",
+  "name": "Buyer-Seller Mediation",
+  "type": "mediation",
+  "timeout_ms": 604800000,
+  "parties": [
+    { "role": "buyer", "label": "Buyer" },
+    { "role": "seller", "label": "Seller" }
+  ],
+  "relay_rules": [
+    {
+      "from_party": "buyer",
+      "to_party": "seller",
+      "transform": "[Buyer]: {{message}}"
+    },
+    {
+      "from_party": "seller",
+      "to_party": "buyer",
+      "transform": "[Seller]: {{message}}"
+    }
+  ],
+  "handlers": [
+    {
+      "event": "message_received",
+      "conditions": [{ "type": "always" }],
+      "actions": [{ "type": "relay_to_party", "to_party": "{{other_party}}" }]
+    }
+  ]
+}

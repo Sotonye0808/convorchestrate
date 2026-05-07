@@ -1,0 +1,12 @@
+{
+  "name": "Default Tenant",
+  "slug": "default",
+  "is_active": true,
+  "config": {
+    "templates": {
+      "verification_success": "Thank you! Your submission has been received and verified.",
+      "awaiting_screenshot": "Great! Please send a screenshot showing the contact is saved.",
+      "please_confirm_first": "Please reply DONE first before sending a screenshot."
+    }
+  }
+}

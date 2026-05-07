@@ -1,0 +1,16 @@
+{
+  "workflow_id": "marketing_funnel_basic",
+  "name": "Basic Marketing Funnel",
+  "type": "sequential",
+  "timeout_ms": 86400000,
+  "triggers": [{ "type": "campaign_start" }],
+  "steps": [
+    {
+      "id": "welcome",
+      "actions": [
+        { "type": "send_message", "template": "funnel_welcome" },
+        { "type": "transition_step", "next_step": "wait_for_interest" }
+      ]
+    }
+  ]
+}

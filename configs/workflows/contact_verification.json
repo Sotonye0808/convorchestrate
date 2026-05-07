@@ -1,0 +1,37 @@
+{
+  "workflow_id": "contact_verification",
+  "name": "Contact Verification Campaign",
+  "type": "reactive",
+  "timeout_ms": 172800000,
+  "on_timeout": [{ "type": "tag_user", "tag": "verification_expired" }],
+  "triggers": [{ "type": "campaign_start" }],
+  "handlers": [
+    {
+      "event": "message_received",
+      "conditions": [
+        { "type": "text_match", "value": "done", "match": "case_insensitive" }
+      ],
+      "actions": [
+        { "type": "set_context", "key": "text_confirmed", "value": true },
+        { "type": "send_message", "template": "awaiting_screenshot" }
+      ]
+    },
+    {
+      "event": "message_received",
+      "conditions": [
+        { "type": "media_received" },
+        { "type": "context_equals", "field": "text_confirmed", "value": true }
+      ],
+      "actions": [
+        { "type": "store_media", "run_ocr": false },
+        {
+          "type": "tag_user",
+          "tag": "verified",
+          "tag_metadata": { "method": "self_reported" }
+        },
+        { "type": "send_message", "template": "verification_success" },
+        { "type": "clear_session" }
+      ]
+    }
+  ]
+}
