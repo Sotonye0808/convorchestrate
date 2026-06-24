@@ -3,13 +3,34 @@
   "name": "Basic Marketing Funnel",
   "type": "sequential",
   "timeout_ms": 86400000,
-  "triggers": [{ "type": "campaign_start" }],
+  "triggers": [
+    { "type": "campaign_start" }
+  ],
   "steps": [
     {
       "id": "welcome",
       "actions": [
         { "type": "send_message", "template": "funnel_welcome" },
         { "type": "transition_step", "next_step": "wait_for_interest" }
+      ]
+    },
+    {
+      "id": "wait_for_interest",
+      "timeout_ms": 3600000,
+      "on_error": [
+        { "type": "tag_user", "tag": "no_response" }
+      ]
+    },
+    {
+      "id": "interested",
+      "conditions": [
+        { "type": "text_match", "value": "yes", "match": "contains" }
+      ],
+      "actions": [
+        { "type": "tag_user", "tag": "interested" },
+        { "type": "send_message", "template": "funnel_details" },
+        { "type": "trigger_webhook", "url": "{{tenant.crm_webhook}}", "method": "POST",
+          "payload": { "event": "lead_captured", "contact": "{{contact.phone}}" } }
       ]
     }
   ]

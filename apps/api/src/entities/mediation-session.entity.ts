@@ -18,8 +18,8 @@ export class MediationSession {
     @Column({ name: "party_a_contact_id", type: "uuid" })
     partyAContactId!: string;
 
-    @Column({ name: "party_b_contact_id", type: "uuid" })
-    partyBContactId!: string;
+    @Column({ name: "party_b_contact_id", type: "uuid", nullable: true })
+    partyBContactId?: string | null;
 
     @Column({ name: "party_a_role", type: "varchar", length: 50 })
     partyARole!: string;

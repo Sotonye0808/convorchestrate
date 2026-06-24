@@ -23,7 +23,22 @@
     {
       "event": "message_received",
       "conditions": [{ "type": "always" }],
-      "actions": [{ "type": "relay_to_party", "to_party": "{{other_party}}" }]
+      "actions": [
+        { "type": "relay_to_party", "to_party": "{{other_party}}" },
+        { "type": "set_context", "key": "last_message_at", "value": "{{now}}" }
+      ]
+    },
+    {
+      "event": "message_received",
+      "conditions": [
+        { "type": "text_match", "value": "deal", "match": "contains" }
+      ],
+      "actions": [
+        { "type": "tag_user", "tag": "deal_agreed" },
+        { "type": "send_message", "template": "deal_confirmed_buyer" },
+        { "type": "send_message", "template": "deal_confirmed_seller" },
+        { "type": "trigger_webhook", "url": "{{tenant.deal_webhook}}", "method": "POST" }
+      ]
     }
   ]
 }

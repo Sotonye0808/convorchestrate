@@ -45,6 +45,7 @@ export interface Condition {
 
 export interface Action {
     type: ActionType;
+    persist_state?: boolean;
     template?: string;
     text?: string;
     tag?: string;
@@ -164,6 +165,7 @@ export const workflowConfigSchema: Record<string, unknown> = {
                         "transition_step"
                     ],
                 },
+                persist_state: { type: "boolean" },
                 template: { type: "string" },
                 text: { type: "string" },
                 tag: { type: "string" },

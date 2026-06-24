@@ -2,16 +2,24 @@ import type {
     Action,
     Condition,
     EventHandler,
+    Step,
     WorkflowConfig,
-} from "@schemas/workflow.schema";
-import type { MemoryProvider, SessionState } from "@memory/provider";
+} from "@convorchestrate/schemas";
+import type { MemoryProvider, SessionState } from "@convorchestrate/memory";
 import type { ActionExecutor } from "./action-executor";
+
+const STATE_MUTATING_TYPES: ReadonlySet<string> = new Set([
+    "set_context",
+    "clear_session",
+    "transition_step",
+]);
 
 export interface EngineContext {
     tenantId: string;
     contactId: string;
     sessionId: string;
     traceId: string;
+    trigger?: string;
     incomingMessage?: NormalizedMessage;
     mediationContext?: MediationContext;
 }
@@ -30,6 +38,7 @@ export interface MediationContext {
     fromParty: string;
     toParty: string;
     parties: Record<string, string>;
+    relayTransform?: string;
 }
 
 export interface EngineLogger {
@@ -44,10 +53,22 @@ export class WorkflowEngine {
     ) { }
 
     async process(config: WorkflowConfig, ctx: EngineContext): Promise<void> {
-        if (config.type !== "reactive") {
-            return;
+        switch (config.type) {
+            case "reactive":
+                await this.processReactive(config, ctx);
+                return;
+            case "sequential":
+                await this.processSequential(config, ctx);
+                return;
+            case "mediation":
+                await this.processMediation(config, ctx);
+                return;
+            default:
+                return;
         }
+    }
 
+    private async processReactive(config: WorkflowConfig, ctx: EngineContext): Promise<void> {
         const state = await this.getOrCreateState(config, ctx);
 
         for (const handler of config.handlers ?? []) {
@@ -55,26 +76,83 @@ export class WorkflowEngine {
                 continue;
             }
 
-            for (const action of handler.actions) {
-                try {
-                    this.applyInMemoryMutation(action, state);
-                    await this.actionExecutor.execute(action, ctx, state);
+            await this.executeActions(handler.actions, ctx, state, config.timeout_ms);
+            return;
+        }
+    }
 
-                    if (this.isStateMutatingAction(action)) {
-                        state.updatedAt = new Date();
-                        await this.memoryProvider.setSession(state.sessionId, state, config.timeout_ms);
-                    }
-                } catch (error) {
-                    this.logger.error("action_execution_failed", {
-                        traceId: ctx.traceId,
-                        actionType: action.type,
-                        error: error instanceof Error ? error.message : String(error),
-                    });
-                    throw error;
-                }
+    private async processSequential(config: WorkflowConfig, ctx: EngineContext): Promise<void> {
+        const state = await this.getOrCreateState(config, ctx);
+        const steps = config.steps ?? [];
+
+        const currentStepId = state.currentStep;
+        const stepIndex = currentStepId
+            ? steps.findIndex((s) => s.id === currentStepId)
+            : 0;
+
+        if (stepIndex < 0 || stepIndex >= steps.length) {
+            return;
+        }
+
+        const step = steps[stepIndex];
+
+        if (step.conditions && step.conditions.length > 0) {
+            const allMatch = step.conditions.every((c) => this.evaluateCondition(c, ctx, state));
+            if (!allMatch) {
+                return;
+            }
+        }
+
+        await this.executeActions(step.actions ?? [], ctx, state, step.timeout_ms ?? config.timeout_ms);
+    }
+
+    private async processMediation(config: WorkflowConfig, ctx: EngineContext): Promise<void> {
+        const state = await this.getOrCreateState(config, ctx);
+
+        if (!ctx.mediationContext) {
+            this.logger.error("mediation_missing_context", { traceId: ctx.traceId });
+            return;
+        }
+
+        for (const handler of config.handlers ?? []) {
+            if (handler.event !== "message_received" && handler.event !== "campaign_start") {
+                continue;
             }
 
+            const conditions = handler.conditions ?? [];
+            const allMatch = conditions.every((c) => this.evaluateCondition(c, ctx, state));
+            if (!allMatch) {
+                continue;
+            }
+
+            await this.executeActions(handler.actions, ctx, state, config.timeout_ms);
             return;
+        }
+    }
+
+    private async executeActions(
+        actions: Action[],
+        ctx: EngineContext,
+        state: SessionState,
+        timeoutMs?: number,
+    ): Promise<void> {
+        for (const action of actions) {
+            try {
+                this.applyInMemoryMutation(action, state);
+                await this.actionExecutor.execute(action, ctx, state);
+
+                if (this.shouldPersistState(action)) {
+                    state.updatedAt = new Date();
+                    await this.memoryProvider.setSession(state.sessionId, state, timeoutMs);
+                }
+            } catch (error) {
+                this.logger.error("action_execution_failed", {
+                    traceId: ctx.traceId,
+                    actionType: action.type,
+                    error: error instanceof Error ? error.message : String(error),
+                });
+                throw error;
+            }
         }
     }
 
@@ -83,7 +161,17 @@ export class WorkflowEngine {
         ctx: EngineContext,
         state: SessionState,
     ): boolean {
-        if (handler.event !== "message_received") {
+        if (handler.event === "message_received" || handler.event === "campaign_start") {
+            if (ctx.trigger === "campaign_start" && handler.event !== "campaign_start") {
+                return false;
+            }
+            if (ctx.incomingMessage && handler.event !== "message_received") {
+                return false;
+            }
+            if (!ctx.incomingMessage && !ctx.trigger) {
+                return false;
+            }
+        } else {
             return false;
         }
 
@@ -138,8 +226,11 @@ export class WorkflowEngine {
         }
     }
 
-    private isStateMutatingAction(action: Action): boolean {
-        return action.type === "set_context" || action.type === "clear_session" || action.type === "transition_step";
+    private shouldPersistState(action: Action): boolean {
+        if (action.persist_state !== undefined) {
+            return action.persist_state;
+        }
+        return STATE_MUTATING_TYPES.has(action.type);
     }
 
     private applyInMemoryMutation(action: Action, state: SessionState): void {
@@ -176,6 +267,10 @@ export class WorkflowEngine {
             startedAt: now,
             updatedAt: now,
         };
+
+        if (config.type === "sequential") {
+            initialState.currentStep = config.steps?.[0]?.id;
+        }
 
         await this.memoryProvider.setSession(ctx.sessionId, initialState, config.timeout_ms);
         return initialState;

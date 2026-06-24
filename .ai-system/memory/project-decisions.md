@@ -67,3 +67,21 @@ Separate databases per tenant.
 **Implications:**
 Repository methods must enforce tenant filters.
 
+## Config-Driven State Persistence
+
+**Decision:** State persistence after action execution is controlled by the `persist_state` field on each Action in the workflow config, not by hardcoded logic in the engine.
+**Date:** 2026-06-23
+**Made by:** Architecture review
+
+**Reason:**
+The original engine hardcoded which action types are "state-mutating" (set_context, clear_session, transition_step). This violates the config-driven principle — the engine should not decide this. The persist_state field moves this decision to the config author, with sensible defaults maintained in the engine for backward compatibility.
+
+**Alternatives Considered:**
+- Hardcoded set in the engine (original approach — rejected for violating section 1.1)
+- Separate mutating/non-mutating action type categories in schema (rejected — adds type complexity)
+
+**Implications:**
+- Workflow configs can now explicitly opt-in or opt-out of state persistence per action
+- Existing configs without persist_state use the engine's default set (unchanged behavior)
+- The STATE_MUTATING_TYPES set in engine.ts serves as the documentation of defaults
+

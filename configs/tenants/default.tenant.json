@@ -4,9 +4,16 @@
   "is_active": true,
   "config": {
     "templates": {
-      "verification_success": "Thank you! Your submission has been received and verified.",
-      "awaiting_screenshot": "Great! Please send a screenshot showing the contact is saved.",
-      "please_confirm_first": "Please reply DONE first before sending a screenshot."
-    }
+      "verification_success": "✅ Thank you! Your submission has been received and verified. Welcome aboard!",
+      "awaiting_screenshot": "Great! Now please send a screenshot showing that you've saved the contact.",
+      "please_confirm_first": "Please reply with *DONE* first before sending the screenshot.",
+      "deal_confirmed_buyer": "🤝 Great news! The seller has agreed to your deal. Expect to be contacted shortly.",
+      "deal_confirmed_seller": "🤝 Great news! The buyer has confirmed the deal.",
+      "funnel_welcome": "👋 Hi {{contact.name}}! Thanks for your interest. Reply *YES* to learn more.",
+      "funnel_details": "Here are the details you requested: {{tenant.funnel_details_url}}"
+    },
+    "crm_webhook": "https://hooks.example.com/crm/lead",
+    "deal_webhook": "https://hooks.example.com/deal/closed",
+    "funnel_details_url": "https://example.com/details"
   }
 }

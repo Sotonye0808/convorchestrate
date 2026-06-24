@@ -6,89 +6,68 @@ Update checkboxes as work is completed so progress is visible at a glance.
 The task queue in planning/task-queue.md contains the actionable steps.
 
 ## Phase 0 - Monorepo Scaffold
-This phase establishes the monorepo, Docker stack, and database migrations.
-All foundational structure must be complete before engine work begins.
-
-- [ ] Monorepo scaffold with apps and packages
-- [ ] Docker compose for postgres, redis, api, worker, dashboard
-- [ ] TypeORM entities for all tables
-- [ ] Initial migration created and applied
-- [ ] .env.example with required variables
+- [x] Monorepo scaffold with apps and packages
+- [x] Docker compose for postgres, redis, api, worker, dashboard
+- [x] TypeORM entities for all tables
+- [x] Initial migration created and applied
+- [x] .env.example with required variables
 
 ## Phase 1 - Engine Core
-This phase implements workflow contracts, validation, and the core engine.
-Unit tests must validate the reactive workflow path.
-
-- [ ] Workflow types and JSON schema
-- [ ] MemoryProvider interface + Redis implementation
-- [ ] WorkflowEngine.process() for reactive workflows
-- [ ] ActionExecutor for core actions
-- [ ] Unit tests for engine and conditions
+- [x] Workflow types and JSON schema
+- [x] MemoryProvider interface + Redis implementation
+- [x] WorkflowEngine.process() for reactive workflows
+- [x] ActionExecutor for core actions
+- [x] Unit tests for engine and conditions
 
 ## Phase 2 - WhatsApp Adapter + Ingress
-This phase connects whatsapp-web.js to the engine through the API.
-Inbound messages must be normalized and queued.
-
-- [ ] Channel adapter implementation
-- [ ] QR streaming controller
-- [ ] Messaging module wiring
-- [ ] Outbound send_message action
-- [ ] Rate limiter and jitter
+- [x] Channel adapter implementation
+- [x] QR streaming controller
+- [x] Messaging module wiring
+- [x] Outbound send_message action
+- [x] Rate limiter and jitter
 
 ## Phase 3 - Media + Tagging
-This phase completes contact verification workflows end-to-end.
-Media storage and tagging must persist data correctly.
-
-- [ ] store_media action
-- [ ] tag_user action
-- [ ] Media controller for uploads
-- [ ] Verification flow manual test
+- [x] store_media action
+- [x] tag_user action
+- [x] Media controller for uploads
+- [x] Verification flow manual test
 
 ## Phase 4 - Sequential + Mediation
-This phase adds sequential and mediation workflow support.
-Relay and delay behavior should be fully operational.
-
-- [ ] Sequential steps and transition_step action
-- [ ] Mediation session support
-- [ ] relay_to_party action
-- [ ] delay and trigger_webhook actions
+- [x] Sequential steps and transition_step action
+- [x] Mediation session support
+- [x] relay_to_party action
+- [x] delay and trigger_webhook actions
 
 ## Phase 5 - Queue System
-This phase routes all processing through BullMQ queues.
-It ensures async execution and reliable retries.
-
-- [ ] Queue module and processors
-- [ ] workflow-execution queue
-- [ ] delayed-message queue
-- [ ] webhook-trigger queue
+- [x] Queue module and processors
+- [x] workflow-execution queue
+- [x] delayed-message queue
+- [x] webhook-trigger queue
 
 ## Phase 6 - Campaigns
-This phase enables bulk messaging and campaign management.
-Rate limiting must be enforced at tenant level.
-
-- [ ] Campaign entity and endpoints
-- [ ] Campaign launch flow
-- [ ] Campaign rate limiting
+- [x] Campaign entity and endpoints
+- [x] Campaign launch flow
+- [x] Campaign rate limiting
 
 ## Phase 7 - Admin Dashboard
-This phase implements all seven required dashboard pages.
-Validation and workflow editing must be fully usable.
-
-- [ ] Login
-- [ ] Dashboard home
-- [ ] Workflows editor
-- [ ] Contacts page
-- [ ] Campaigns page
-- [ ] Logs page
-- [ ] Settings page
+- [x] Login
+- [x] Dashboard home
+- [x] Workflows editor
+- [x] Contacts page
+- [x] Campaigns page
+- [x] Logs page
+- [x] Settings page
 
 ## Phase 8 - Hardening + Deploy
-This phase hardens security and prepares production deployment.
-Docker builds and health checks must pass.
+- [x] Helmet, CORS, rate limiting
+- [x] Structured logging with trace_id
+- [x] Health endpoints
+- [x] Production Dockerfiles
+- [x] docker compose build verified
 
-- [ ] Helmet, CORS, rate limiting
-- [ ] Structured logging with trace_id
-- [ ] Health endpoints
-- [ ] Production Dockerfiles
-- [ ] docker compose build verified
-
+## Post-Launch — Demo Mode + Testing
+- [x] Demo mode toggle in admin dashboard
+- [x] Simulated message endpoint for testing
+- [x] Seed script for demo data
+- [x] Local testing guide (SETUP.md)
+- [x] Deployment guide (SETUP.md)
