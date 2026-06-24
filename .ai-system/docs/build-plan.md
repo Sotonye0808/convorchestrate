@@ -170,7 +170,7 @@ CREATE TABLE mediation_sessions (
   workflow_id UUID NOT NULL REFERENCES workflows(id),
   session_id UUID REFERENCES sessions(id),
   party_a_contact_id UUID NOT NULL REFERENCES contacts(id),
-  party_b_contact_id UUID NOT NULL REFERENCES contacts(id),
+  party_b_contact_id UUID REFERENCES contacts(id),  -- nullable: Party B may be resolved dynamically
   party_a_role VARCHAR(50) NOT NULL,  -- e.g. "buyer"
   party_b_role VARCHAR(50) NOT NULL,  -- e.g. "seller"
   context JSONB DEFAULT '{}',
@@ -815,7 +815,7 @@ Tasks:
 **Goal:** Bulk send to a list of contacts, starting sessions for each.
 
 Tasks:
-1. Create `Campaign` entity and `campaigns` table (name, workflow_id, status, contact_list JSONB, tenant_id, created_at)
+1. Create `Campaign` entity and `campaigns` table (name, workflow_id, status, contact_list JSONB, total_count, sent_count, failed_count, started_at, completed_at, tenant_id)
 2. `CampaignService.launch(campaignId)` — for each phone in the contact list, upsert the contact, create a session, enqueue a `campaign_start` event in `workflow-execution` queue
 3. Add rate limiting at campaign level: no more than 20 campaign messages per minute per tenant (configurable in tenant config)
 4. `CampaignController`: `POST /campaigns`, `GET /campaigns`, `POST /campaigns/:id/launch`

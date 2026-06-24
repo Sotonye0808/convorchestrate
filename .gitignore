@@ -1,7 +1,46 @@
+# Dependencies
 node_modules/
-dist/
-.env
-uploads/
-.turbo/
 packages/*/node_modules
 apps/*/node_modules
+
+# Build output
+dist/
+.turbo/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+*-error.log
+
+# WhatsApp session data (contains credentials)
+wa-sessions/
+apps/api/wa-sessions/
+
+# Media uploads
+uploads/
+
+# Test coverage
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+tmp/
+temp/
+
+# Vite cache
+.vite/

@@ -28,6 +28,22 @@ Core workflow logic never imports adapters, and all behavior is driven by JSON c
 - Adapter isolation: core never imports adapters
 - Tenant-first: every query filters by tenant_id
 
+## Current State (2026-06-24)
+All 8 build phases are complete. The API boots successfully with all 22 modules and 23 routes.
+- `npm run build` passes in all 8 packages
+- `npm run test` passes in `packages/core` (13/13: reactive, sequential, mediation)
+- PostgreSQL + Redis are running via Docker Compose
+- Migrations applied: `InitSchema` + `AddCampaignsAndFixNullable`
+- .env file must be at project root; ConfigModule reads it via explicit `envFilePath: resolve(__dirname, '../../../.env')` (need 3 levels up from `apps/api/src/`)
+
+## Key Gotchas
+- **`import type` breaks NestJS DI**: Never use `import type` for injectable classes — use `import { Cls, type SomeType }` instead
+- **Fastify 4 plugin compat**: NestJS 10 ships Fastify 4; pin `@fastify/*` plugins to Fastify 4-compatible majors (helmet@11, rate-limit@9, multipart@8)
+- **Migrations**: Write targeted migrations manually; `typeorm:generate` is overly destructive on partial schemas
+
 ## Build plan reference
 See .ai-system/docs/build-plan.md for phases, schema, and implementation detail.
+
+## Session log
+See .ai-system/checkpoints/session-log.md for what each session accomplished.
 

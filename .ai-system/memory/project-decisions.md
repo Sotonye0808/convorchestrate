@@ -85,3 +85,36 @@ The original engine hardcoded which action types are "state-mutating" (set_conte
 - Existing configs without persist_state use the engine's default set (unchanged behavior)
 - The STATE_MUTATING_TYPES set in engine.ts serves as the documentation of defaults
 
+## Fastify 4 Plugin Pinning
+
+**Decision:** Pin `@fastify/*` plugins to versions compatible with Fastify 4.x.
+**Date:** 2026-06-24
+**Made by:** Runtime error during startup
+
+**Reason:**
+NestJS 10's `@nestjs/platform-fastify` depends on Fastify 4.x. The `@fastify/*` plugin ecosystem has moved to Fastify 5.x for newer major versions. Installing the latest versions produces runtime warnings and potential undefined behaviour.
+
+**Alternatives Considered:**
+- Upgrading NestJS to v11 for Fastify 5 support (not yet stable, would require major migration)
+- Removing the plugins entirely (loses Helmet, rate limiting, multipart upload)
+- Ignoring the warnings (undocumented behaviour risk)
+
+**Implications:**
+- New `@fastify/*` plugins added in future must be checked for Fastify 4 compatibility
+- Compatible versions documented in `lessons-learned.md`
+- A future NestJS upgrade can unlock Fastify 5 and the latest plugin versions
+
+## Mediation Sessions — party_b_contact_id Made Nullable
+
+**Decision:** Allow `party_b_contact_id` in `mediation_sessions` to be NULL.
+**Date:** 2026-06-24
+**Made by:** Schema review
+
+**Reason:**
+When creating a mediation session, Party B (the respondent) may not be known at creation time. They are discovered dynamically when a message arrives that matches the mediation trigger. Making the column nullable supports this flow without requiring a placeholder contact.
+
+**Implications:**
+- Migration alters `mediation_sessions` to make `party_b_contact_id` nullable
+- `MediationSession` entity updated with `@JoinColumn({ nullable: true })`
+- Engine's `resolveMediationParty()` must handle the case where `partyBContactId` is null
+

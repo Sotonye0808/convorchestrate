@@ -42,6 +42,26 @@ convorchestrate/
 | configs | Sample workflow configs | configs/workflows |
 | scripts | Seed and tooling | scripts/seed.ts |
 
+## API Module Structure
+
+```
+apps/api/src/modules/
+├── auth/           JWT auth (login/me)
+├── campaigns/      Campaign CRUD + launch
+├── contacts/       Contact CRUD
+├── dashboard/      Dashboard stats
+├── demo/           Demo/seed endpoints
+├── engine/         Wraps packages/core
+├── events/         Event log
+├── health/         Health check
+├── media/          Media uploads
+├── messaging/      WhatsApp adapter wrapper + QR
+├── queue/          BullMQ queues (Global module)
+├── sessions/       Session queries
+├── settings/       Tenant config
+└── workflows/      Workflow CRUD
+```
+
 ## Entry Points
 
 | Purpose | File |

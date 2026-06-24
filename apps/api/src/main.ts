@@ -13,6 +13,8 @@ async function bootstrap() {
         new FastifyAdapter({ logger: true }),
     );
 
+    app.setGlobalPrefix("api");
+
     await app.register(helmet, {
         contentSecurityPolicy: false,
     });

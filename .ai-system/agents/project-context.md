@@ -29,11 +29,11 @@ They come directly from the build plan and architecture rules.
 - Adapter isolation between core and channels
 
 ## Current Project Phase
-This project is in active development, starting with Phase 0 scaffold.
-The current focus is completing the monorepo scaffold and DB migrations.
+This project is in active development. All 8 build phases are complete (scaffold → hardening).
+The API app starts successfully with all modules initialized and all routes mapped.
 
 Phase: Active Development
-Active sprint focus: Phase 0 scaffold and AI system bootstrap
+Active sprint focus: Testing, demo mode, and deployment
 
 ## Tech Decisions Already Made
 These decisions are locked unless explicitly revisited.

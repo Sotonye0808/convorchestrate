@@ -55,13 +55,20 @@ export class MessagingService implements OnModuleInit {
             return this.engineService.process(job.config, job.ctx);
         });
 
-        await this.adapter.initialize("default", {
-            sessionDataPath,
-            rateLimitMs: 1200,
-            jitterMs: 1500,
-        });
+        try {
+            await this.adapter.initialize("default", {
+                sessionDataPath,
+                rateLimitMs: 1200,
+                jitterMs: 1500,
+            });
 
-        this.logger.log("WhatsApp adapter initialized and wired");
+            this.logger.log("WhatsApp adapter initialized and wired");
+        } catch (error) {
+            this.logger.warn(
+                `whatsapp_adapter_unavailable: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            this.logger.warn("API will continue without WhatsApp; demo and admin routes remain available");
+        }
     }
 
     async handleIncoming(raw: IncomingRawMessage): Promise<void> {

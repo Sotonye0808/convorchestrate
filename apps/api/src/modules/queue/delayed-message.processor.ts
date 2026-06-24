@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ChannelAdapter, OutgoingMessage } from "@convorchestrate/adapters";
-import type { QueueService, DelayedMessageJob } from "./queue.service";
+import { QueueService, type DelayedMessageJob } from "./queue.service";
 
 @Injectable()
 export class DelayedMessageProcessor {

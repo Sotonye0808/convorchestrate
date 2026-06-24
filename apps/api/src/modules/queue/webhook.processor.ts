@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import type { QueueService, WebhookTriggerJob } from "./queue.service";
+import { QueueService, type WebhookTriggerJob } from "./queue.service";
 
 @Injectable()
 export class WebhookProcessor {

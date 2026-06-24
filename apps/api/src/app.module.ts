@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { resolve } from "path";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { LoggerModule } from "nestjs-pino";
 import { Tenant } from "./entities/tenant.entity";
@@ -15,6 +16,7 @@ import { Campaign } from "./entities/campaign.entity";
 import { MessagingModule } from "./modules/messaging/messaging.module";
 import { MediaModule } from "./modules/media/media.module";
 import { CampaignModule } from "./modules/campaigns/campaign.module";
+import { QueueModule } from "./modules/queue/queue.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { ContactsModule } from "./modules/contacts/contacts.module";
@@ -27,7 +29,10 @@ import { DemoModule } from "./modules/demo/demo.module";
 
 @Module({
     imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
+        ConfigModule.forRoot({
+            isGlobal: true,
+            envFilePath: resolve(__dirname, "../../../.env"),
+        }),
         LoggerModule.forRoot({
             pinoHttp: {
                 level: process.env.LOG_LEVEL ?? "info",
@@ -66,6 +71,7 @@ import { DemoModule } from "./modules/demo/demo.module";
         MessagingModule,
         MediaModule,
         CampaignModule,
+        QueueModule,
         HealthModule,
         DemoModule,
     ],
