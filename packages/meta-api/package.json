@@ -1,5 +1,5 @@
 {
-  "name": "@convorchestrate/core",
+  "name": "@convorchestrate/meta-api",
   "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -7,7 +7,5 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/**/*.test.js"
   },
-  "dependencies": {
-    "@convorchestrate/schemas": "0.1.0"
-  }
+  "dependencies": {}
 }

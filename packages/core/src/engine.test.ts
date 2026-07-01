@@ -2,12 +2,11 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { WorkflowEngine } from "./engine";
 import type { ActionExecutor } from "./action-executor";
-import type { ContactState, MemoryProvider, SessionState } from "@convorchestrate/memory";
+import type { MemoryProvider, SessionState } from "./types";
 import type { WorkflowConfig } from "@convorchestrate/schemas";
 
 class InMemoryProvider implements MemoryProvider {
     private readonly sessions = new Map<string, SessionState>();
-    private readonly contacts = new Map<string, ContactState>();
 
     async getSession(sessionId: string): Promise<SessionState | null> {
         return this.sessions.get(sessionId) ?? null;
@@ -19,14 +18,6 @@ class InMemoryProvider implements MemoryProvider {
 
     async deleteSession(sessionId: string): Promise<void> {
         this.sessions.delete(sessionId);
-    }
-
-    async getContact(tenantId: string, phone: string): Promise<ContactState | null> {
-        return this.contacts.get(`${tenantId}:${phone}`) ?? null;
-    }
-
-    async setContact(tenantId: string, phone: string, data: ContactState): Promise<void> {
-        this.contacts.set(`${tenantId}:${phone}`, data);
     }
 }
 

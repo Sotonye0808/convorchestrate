@@ -5,7 +5,7 @@ import type {
     Step,
     WorkflowConfig,
 } from "@convorchestrate/schemas";
-import type { MemoryProvider, SessionState } from "@convorchestrate/memory";
+import type { MemoryProvider, SessionState } from "./types";
 import type { ActionExecutor } from "./action-executor";
 
 const STATE_MUTATING_TYPES: ReadonlySet<string> = new Set([

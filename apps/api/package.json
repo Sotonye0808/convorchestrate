@@ -11,9 +11,8 @@
     "migration:generate": "typeorm-ts-node-commonjs -d src/db/data-source.ts migration:generate src/db/migrations/init"
   },
   "dependencies": {
-    "@convorchestrate/adapters": "0.1.0",
     "@convorchestrate/core": "0.1.0",
-    "@convorchestrate/memory": "0.1.0",
+    "@convorchestrate/meta-api": "0.1.0",
     "@convorchestrate/schemas": "0.1.0",
     "@convorchestrate/utils": "0.1.0",
     "@fastify/cors": "^9.0.1",

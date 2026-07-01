@@ -1,9 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ConfigService } from "@nestjs/config";
-import { WwjsAdapter } from "@convorchestrate/adapters";
-import type { ChannelAdapter, IncomingRawMessage } from "@convorchestrate/adapters";
+import { MetaApiClient } from "@convorchestrate/meta-api";
 import type { WorkflowEngine, MediationContext } from "@convorchestrate/core";
 import type { WorkflowConfig, RelayRule } from "@convorchestrate/schemas";
 import { Tenant } from "../../entities/tenant.entity";
@@ -11,19 +10,31 @@ import { Contact } from "../../entities/contact.entity";
 import { Workflow } from "../../entities/workflow.entity";
 import { Session } from "../../entities/session.entity";
 import { MediationSession } from "../../entities/mediation-session.entity";
-import { normalizeMessage } from "./message-normalizer";
 import { EngineService } from "../engine/engine.service";
 import { QueueService, WorkflowExecutionJob } from "../queue/queue.service";
 import { DelayedMessageProcessor } from "../queue/delayed-message.processor";
 import { randomUUID } from "crypto";
 
+export interface IncomingWebhookMessage {
+    from: string;
+    id: string;
+    timestamp: string;
+    type: string;
+    text?: { body: string };
+    image?: { id: string; mime_type: string; sha256: string };
+    video?: { id: string; mime_type: string; sha256: string };
+    document?: { id: string; mime_type: string; sha256: string; filename?: string };
+    audio?: { id: string; mime_type: string; sha256: string };
+    button?: { text: string; payload: string };
+}
+
 @Injectable()
-export class MessagingService implements OnModuleInit {
+export class MessagingService {
     private readonly logger = new Logger(MessagingService.name);
 
     constructor(
         private readonly engineService: EngineService,
-        private readonly adapter: WwjsAdapter,
+        private readonly metaApiClient: MetaApiClient,
         private readonly configService: ConfigService,
         private readonly queueService: QueueService,
         private readonly delayedMessageProcessor: DelayedMessageProcessor,
@@ -37,42 +48,18 @@ export class MessagingService implements OnModuleInit {
         private readonly sessionRepo: Repository<Session>,
         @InjectRepository(MediationSession)
         private readonly mediationSessionRepo: Repository<MediationSession>,
-    ) { }
-
-    async onModuleInit(): Promise<void> {
-        const sessionDataPath = this.configService.get<string>("WA_SESSION_DATA_PATH") ?? "./wa-sessions";
-
-        this.adapter.onMessage((raw: IncomingRawMessage) => {
-            this.handleIncoming(raw).catch((err) => {
-                this.logger.error("incoming_message_failed", err instanceof Error ? err.message : String(err));
-            });
-        });
-
-        this.engineService.setAdapter(this.adapter);
-        this.delayedMessageProcessor.setAdapter(this.adapter);
-
+    ) {
+        const send = (phone: string, text: string) =>
+            this.metaApiClient.sendText(phone, text);
+        this.engineService.setSendFunction(send);
+        this.delayedMessageProcessor.setSendFunction(send);
         this.queueService.setWorkflowHandler((job) => {
             return this.engineService.process(job.config, job.ctx);
         });
-
-        try {
-            await this.adapter.initialize("default", {
-                sessionDataPath,
-                rateLimitMs: 1200,
-                jitterMs: 1500,
-            });
-
-            this.logger.log("WhatsApp adapter initialized and wired");
-        } catch (error) {
-            this.logger.warn(
-                `whatsapp_adapter_unavailable: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            this.logger.warn("API will continue without WhatsApp; demo and admin routes remain available");
-        }
     }
 
-    async handleIncoming(raw: IncomingRawMessage): Promise<void> {
-        const phone = raw.from.replace(/@[a-z.]+$/g, "");
+    async handleIncoming(raw: IncomingWebhookMessage): Promise<void> {
+        const phone = raw.from;
         const tenant = await this.tenantRepo.findOne({ where: { isActive: true } });
         if (!tenant) {
             this.logger.warn("no_active_tenant");
@@ -153,7 +140,13 @@ export class MessagingService implements OnModuleInit {
             contactId: contact.id,
             sessionId,
             traceId: randomUUID(),
-            incomingMessage: normalizeMessage(raw),
+            incomingMessage: {
+                type: raw.type as any,
+                text: raw.text?.body,
+                mediaUrl: raw.image?.id ?? raw.video?.id ?? raw.document?.id,
+                timestamp: new Date(Number(raw.timestamp) * 1000),
+                raw,
+            },
             mediationContext,
         };
 
@@ -172,9 +165,9 @@ export class MessagingService implements OnModuleInit {
     ): Promise<{ role: string } | null> {
         const existing = await this.mediationSessionRepo.findOne({
             where: [
-                { tenantId, partyAContactId: contactId, status: "active" },
-                { tenantId, partyBContactId: contactId, status: "active" },
-            ],
+                { tenantId, partyAContactId: contactId, status: "active" as any },
+                { tenantId, partyBContactId: contactId, status: "active" as any },
+            ] as any,
         });
         if (existing) {
             const role = existing.partyAContactId === contactId
@@ -184,7 +177,7 @@ export class MessagingService implements OnModuleInit {
         }
 
         const openSlot = await this.mediationSessionRepo.findOne({
-            where: { tenantId, status: "active" },
+            where: { tenantId, status: "active" as any },
             order: { createdAt: "DESC" },
         });
         if (openSlot && !openSlot.partyBContactId) {

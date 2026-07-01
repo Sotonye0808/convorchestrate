@@ -10,8 +10,6 @@
     "baseUrl": ".",
     "paths": {
       "@core/*": ["packages/core/src/*"],
-      "@adapters/*": ["packages/adapters/src/*"],
-      "@memory/*": ["packages/memory/src/*"],
       "@schemas/*": ["packages/schemas/src/*"],
       "@utils/*": ["packages/utils/src/*"]
     }

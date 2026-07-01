@@ -48,9 +48,10 @@ Active sprint focus: Demo mode, local testing, deployment preparation
 |----------|--------|
 | NestJS + Fastify | High-performance API framework |
 | PostgreSQL + TypeORM | Relational data + migrations |
-| Redis + BullMQ | Queueing and background jobs |
-| whatsapp-web.js | Most maintained WhatsApp Web adapter |
+| Meta WhatsApp Cloud API | Official, reliable, no Puppeteer dependency (replaces whatsapp-web.js) |
+| Next.js 15 + React 19 | Modern, production-tested dashboard (from wa-manager) |
 | Config-driven workflows | Avoid hardcoded business rules |
+| Multi-tenant isolation | Tenant_id on every query |
 
 ---
 
@@ -68,4 +69,5 @@ Active sprint focus: Demo mode, local testing, deployment preparation
 
 | Service | Purpose | Auth Method |
 |---------|---------|------------|
-| WhatsApp Web | Message transport | LocalAuth session |
+| Meta WhatsApp Cloud API | Message transport (templates, images, text) | OAuth Bearer token |
+| WhatsApp Web | Optional legacy transport (via whatsapp-web.js, deprecated) | LocalAuth session |

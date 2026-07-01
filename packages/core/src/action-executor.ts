@@ -1,5 +1,5 @@
 import type { Action } from "@convorchestrate/schemas";
-import type { SessionState } from "@convorchestrate/memory";
+import type { SessionState } from "./types";
 import type { EngineContext } from "./engine";
 
 export interface ActionExecutor {

@@ -142,6 +142,29 @@ NestJS 10's `@nestjs/platform-fastify` depends on Fastify 4.x. The `@fastify/*` 
 - New `@fastify/*` plugins added in future must be checked for Fastify 4 compatibility
 - A future NestJS upgrade can unlock Fastify 5 and the latest plugin versions
 
+## Rebase on wa-manager Foundation
+
+**Decision:** Replace the custom whatsapp-web.js + NestJS campaign implementation with the production-tested wa-manager engine using Meta WhatsApp Cloud API.
+**Date:** 2026-07-01
+**Made by:** Product direction
+**Supersedes:** All prior Phase 1-8 campaign, adapter, and dashboard decisions
+**Superseded by:** None
+
+**Reason:**
+The original convorchestrate build used whatsapp-web.js (Puppeteer-based, unofficial, browser-dependent) which is fragile and blocks API boot on stale sessions. The wa-manager project provides a battle-tested campaign engine using Meta's official WhatsApp Cloud API with delivery webhooks, template management, and a modern Next.js dashboard — solving the same problems more reliably.
+
+**Alternatives Considered:**
+- Keeping whatsapp-web.js and fixing stability issues (rejected: fundamental browser dependency problem)
+- Rewriting wa-manager's Go backend in NestJS (chosen: preserves monorepo consistency, enables reuse of packages/schemas)
+- Keeping both systems side by side (rejected: complexity, conflicting codebases)
+
+**Implications:**
+- whatsapp-web.js adapter removed; Meta Cloud API adapter created as `packages/meta-api`
+- Old React/Vite dashboard replaced with wa-manager's Next.js dashboard
+- Campaign data model ported from GORM to TypeORM
+- All existing Phase 1-8 task queue items superseded by new R1-R9 phases
+- Original wa-manager credited in README
+
 ## Mediation Sessions — party_b_contact_id Made Nullable
 
 **Decision:** Allow `party_b_contact_id` in `mediation_sessions` to be NULL.

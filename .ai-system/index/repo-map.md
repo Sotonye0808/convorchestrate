@@ -1,7 +1,7 @@
 # Repository Map
 
 > **Metadata**
-> - last-updated-by: migration-v1-to-v2
+> - last-updated-by: execute-feature (R1 foundation)
 > - last-verified-against-code: 2026-07-01
 > - staleness-policy: auto-regenerable — can be derived from `Get-ChildItem -Recurse` or `tree` command. Manual content only where intent cannot be derived from structure.
 
@@ -14,19 +14,16 @@
 ```
 convorchestrate/
 |-- apps/
-|   |-- api/          -> NestJS API app
-|   |-- worker/       -> BullMQ worker app
-|   `-- dashboard/    -> React dashboard
+|   |-- api/          -> NestJS + Fastify API (Meta Cloud API integration)
+|   `-- dashboard/    -> Next.js 15 dashboard (from wa-manager)
 |-- packages/
-|   |-- core/         -> Workflow engine
-|   |-- adapters/     -> Channel adapters
-|   |-- memory/       -> Memory providers
-|   |-- schemas/      -> JSON schema validators
-|   `-- utils/        -> Shared utilities
-|-- infrastructure/   -> Dockerfiles + docker-compose.yml
+|   |-- core/         -> Workflow engine (refactored)
+|   |-- schemas/      -> Workflow JSON schema + validators
+|   `-- utils/        -> Shared types and helpers
+|-- infrastructure/   -> Docker compose (postgres + api + dashboard)
 |-- configs/          -> Workflow and tenant config samples
 |-- scripts/          -> Seed scripts and tooling
-|-- .ai-system/       -> AI documentation system
+|-- .ai-system/       -> AI development system
 `-- package.json
 ```
 
@@ -36,15 +33,12 @@ convorchestrate/
 
 | Directory | Purpose | Key Files |
 |-----------|---------|-----------|
-| apps/api | API app with NestJS + Fastify | apps/api/src/main.ts |
-| apps/worker | Background worker | apps/worker/src/main.ts |
-| apps/dashboard | React admin UI | apps/dashboard/src/main.tsx |
-| packages/core | Workflow engine | packages/core/src |
-| packages/adapters | Channel adapters | packages/adapters/src |
-| packages/memory | Memory provider interfaces + Redis | packages/memory/src |
-| packages/schemas | Workflow schema | packages/schemas/src |
+| apps/api | NestJS API with Meta Cloud API integration | apps/api/src/main.ts |
+| apps/dashboard | Next.js 15 admin dashboard (campaigns, templates, groups, history) | apps/dashboard/app/page.tsx |
+| packages/core | Workflow engine (to be refactored in R5) | packages/core/src |
+| packages/schemas | Workflow JSON schema + validators | packages/schemas/src |
 | packages/utils | Shared helpers | packages/utils/src |
-| infrastructure | Docker and compose | infrastructure/docker-compose.yml |
+| infrastructure | Docker compose (postgres + api + dashboard) | infrastructure/docker-compose.yml |
 | configs | Sample workflow configs | configs/workflows |
 | scripts | Seed and tooling | scripts/seed.ts |
 
@@ -53,19 +47,15 @@ convorchestrate/
 ```
 apps/api/src/modules/
 ├── auth/           JWT auth (login/me)
-├── campaigns/      Campaign CRUD + launch
-├── contacts/       Contact CRUD
-├── dashboard/      Dashboard stats
-├── demo/           Demo/seed endpoints
-├── engine/         Wraps packages/core
-├── events/         Event log
+├── campaigns/      Campaign CRUD + async send engine
+├── contacts/       Contact CRUD + CSV import
+├── groups/         Contact groups
+├── templates/      WhatsApp template management + Meta submission
+├── webhooks/       Meta delivery callback receiver
+├── mediator/       Marketplace mediation (R7)
+├── workflows/      Config-driven workflow execution (R5)
 ├── health/         Health check
-├── media/          Media uploads
-├── messaging/      WhatsApp adapter wrapper + QR
-├── queue/          BullMQ queues (Global module)
-├── sessions/       Session queries
-├── settings/       Tenant config
-└── workflows/      Workflow CRUD
+└── tenants/        Multi-tenant management (R4)
 ```
 
 ---
@@ -75,6 +65,5 @@ apps/api/src/modules/
 | Purpose | File |
 |---------|------|
 | API server | apps/api/src/main.ts |
-| Worker | apps/worker/src/main.ts |
-| Dashboard | apps/dashboard/src/main.tsx |
+| Dashboard | apps/dashboard/app/page.tsx |
 | Root config | package.json |

@@ -1,13 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ChannelAdapter, OutgoingMessage } from "@convorchestrate/adapters";
 import {
     Action,
     WorkflowEngine,
     EngineContext,
     SessionState,
     ActionExecutor,
+    InMemoryProvider,
 } from "@convorchestrate/core";
-import { RedisMemoryProvider } from "@convorchestrate/memory";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { randomUUID } from "crypto";
@@ -24,10 +23,10 @@ import { QueueService, DelayedMessageJob, WebhookTriggerJob } from "../queue/que
 export class EngineService {
     private readonly logger = new Logger(EngineService.name);
     private readonly engine: WorkflowEngine;
-    private adapter: ChannelAdapter | null = null;
+    private sendMessageFn: ((phone: string, text: string) => Promise<string>) | null = null;
 
     constructor(
-        private readonly memoryProvider: RedisMemoryProvider,
+        private readonly memoryProvider: InMemoryProvider,
         private readonly queueService: QueueService,
         @InjectRepository(Tenant)
         private readonly tenantRepo: Repository<Tenant>,
@@ -46,11 +45,11 @@ export class EngineService {
                 this.logger.error(message, meta);
             },
         };
-        this.engine = new WorkflowEngine(memoryProvider, executor, engineLogger);
+        this.engine = new WorkflowEngine(this.memoryProvider, executor, engineLogger);
     }
 
-    setAdapter(adapter: ChannelAdapter): void {
-        this.adapter = adapter;
+    setSendFunction(fn: (phone: string, text: string) => Promise<string>): void {
+        this.sendMessageFn = fn;
     }
 
     async process(config: Parameters<WorkflowEngine["process"]>[0], ctx: EngineContext): Promise<void> {
@@ -101,13 +100,10 @@ export class EngineService {
                     return;
                 }
 
-                const phone = ctx.contactId;
-                const outgoing: OutgoingMessage = { text: template };
-
-                if (self.adapter) {
-                    await self.adapter.sendMessage(phone, outgoing);
+                if (self.sendMessageFn) {
+                    await self.sendMessageFn(ctx.contactId, template);
                 } else {
-                    self.logger.warn("send_message_no_adapter", { traceId: ctx.traceId });
+                    self.logger.warn("send_message_no_send_function", { traceId: ctx.traceId });
                 }
                 return;
             }
@@ -142,12 +138,11 @@ export class EngineService {
                 const filename = `${randomUUID()}${ext}`;
                 const filePath = path.join(dir, filename);
 
-                if (ctx.incomingMessage?.mediaUrl && self.adapter) {
+                if (ctx.incomingMessage?.mediaUrl) {
                     try {
-                        const rawMsg = ctx.incomingMessage.raw;
-                        const buffer = await self.adapter.downloadMedia(
-                            rawMsg as Parameters<ChannelAdapter["downloadMedia"]>[0],
-                        );
+                        const url = ctx.incomingMessage.mediaUrl;
+                        const resp = await fetch(url);
+                        const buffer = Buffer.from(await resp.arrayBuffer());
                         await mkdir(dir, { recursive: true });
                         await writeFile(filePath, buffer);
 
@@ -155,7 +150,7 @@ export class EngineService {
                             tenantId: ctx.tenantId,
                             contactId: ctx.contactId,
                             sessionId: ctx.sessionId,
-                            type: ctx.incomingMessage.type.toUpperCase(),
+                            type: (ctx.incomingMessage.type ?? "UNKNOWN").toUpperCase(),
                             originalFilename: filename,
                             storagePath: filePath,
                             metadata: {},
@@ -235,7 +230,7 @@ export class EngineService {
                     where: {
                         tenantId: ctx.tenantId,
                         sessionId: ctx.sessionId,
-                    },
+                    } as any,
                 });
                 if (!mediation) {
                     self.logger.warn("relay_to_party_mediation_not_found", {
@@ -267,16 +262,15 @@ export class EngineService {
                     ? transformTemplate.replace("{{message}}", incomingText)
                     : incomingText;
 
-                const outgoing: OutgoingMessage = { text: transformedText };
-                if (self.adapter) {
-                    await self.adapter.sendMessage(targetContact.phone, outgoing);
+                if (self.sendMessageFn) {
+                    await self.sendMessageFn(targetContact.phone, transformedText);
                     self.logger.log("relay_to_party_sent", {
                         traceId: ctx.traceId,
                         toParty: targetRole,
                         toContactId: targetContactId,
                     });
                 } else {
-                    self.logger.warn("relay_to_party_no_adapter", { traceId: ctx.traceId });
+                    self.logger.warn("relay_to_party_no_send_function", { traceId: ctx.traceId });
                 }
                 return;
             }

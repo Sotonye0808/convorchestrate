@@ -13,6 +13,18 @@ async function bootstrap() {
         new FastifyAdapter({ logger: true }),
     );
 
+    const instance = app.getHttpAdapter().getInstance();
+
+    // Capture raw body for webhook HMAC-SHA256 signature verification
+    instance.addHook("preParsing", function (request: any, _reply: any, payload: any, done: any) {
+        const chunks: Buffer[] = [];
+        payload.on("data", (chunk: Buffer) => chunks.push(chunk));
+        payload.on("end", () => {
+            request.rawBody = Buffer.concat(chunks).toString("utf-8");
+        });
+        done();
+    });
+
     app.setGlobalPrefix("api");
 
     await app.register(helmet, {

@@ -13,7 +13,9 @@ import { EventLog } from "./entities/event-log.entity";
 import { Media } from "./entities/media.entity";
 import { AdminUser } from "./entities/admin-user.entity";
 import { Campaign } from "./entities/campaign.entity";
+import { CampaignMessage } from "./entities/campaign-message.entity";
 import { MessagingModule } from "./modules/messaging/messaging.module";
+import { WebhooksModule } from "./modules/webhooks/webhooks.module";
 import { MediaModule } from "./modules/media/media.module";
 import { CampaignModule } from "./modules/campaigns/campaign.module";
 import { QueueModule } from "./modules/queue/queue.module";
@@ -58,6 +60,7 @@ import { DemoModule } from "./modules/demo/demo.module";
                 Media,
                 AdminUser,
                 Campaign,
+                CampaignMessage,
             ],
             synchronize: false,
         }),
@@ -68,6 +71,7 @@ import { DemoModule } from "./modules/demo/demo.module";
         EventsModule,
         SessionsModule,
         SettingsModule,
+        WebhooksModule,
         MessagingModule,
         MediaModule,
         CampaignModule,
