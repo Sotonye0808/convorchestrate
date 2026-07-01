@@ -1,45 +1,54 @@
 # Plan Feature Command
 
-> **Overview:** Use this before implementing any new feature. It analyzes architecture impact, identifies required modules, and updates the task queue with concrete steps before any code is written.
+> **Metadata**
+> - last-updated-by: bootstrap-project
+> - last-verified-against-code: (set on first run)
+> - staleness-policy: re-verify if architecture or planning process changes
+
+> **Overview:** Analyzes architecture impact before any code is written. Produces a structured plan, identifies affected modules, and updates the task queue. Planning only — no implementation.
 
 ---
 
-## Prompt
+## Contract
 
-```
-Read the following before responding:
-- .ai-context.md
-- .ai-system/agents/system-architecture.md
-- .ai-system/agents/design-system.md
-- .ai-system/planning/project-plan.md
-- .ai-system/planning/task-queue.md
-
-TASK: Plan the implementation of a new feature.
-
-Produce:
-1. Feature summary — what it does and why it's needed
-2. Architecture impact — which existing modules are affected
-3. New modules or services required
-4. Data flow — how data moves through the feature
-5. UI/UX considerations aligned with design-system.md
-6. Potential risks or edge cases
-7. List of concrete implementation tasks → append these to task-queue.md
-8. Any architecture doc updates needed → note them for system-architecture.md
-
-Do not write any code yet. Planning only.
-```
+| Guarantees | Does NOT |
+|------------|----------|
+| Identifies all modules affected by the feature | Does not write any implementation code |
+| Produces a concrete task list with dependencies | Does not change architecture without documenting it |
+| Flags risks, edge cases, and conflicts with prior decisions | Does not make assumptions about specific AI tools |
+| Checks scope against project-context.md | Does not skip reading existing architecture docs |
 
 ---
 
-## With Directive
+## Required Inputs
+
+A feature description.
+
+## Optional Directives
 
 ```
 Execute command: plan-feature.md
-Directive: [describe the feature]
+Directive: [feature description]
 
-Examples:
-Directive: implement role-based authentication with JWT and refresh tokens
-Directive: add a real-time notifications system using WebSockets
-Directive: build a configurable export module that supports CSV, PDF, and JSON
+Directive: Implement role-based authentication with JWT and refresh tokens
+Directive: Add a real-time notifications system using WebSockets
+Directive: Build a configurable export module that supports CSV, PDF, and JSON
 ```
 
+---
+
+## Execution
+
+1. Read `system-architecture.md`, `design-system.md`, `project-context.md`, `planning/task-queue.md`, `memory/project-decisions.md`.
+
+2. Produce:
+   - **Feature summary** — what it does and why
+   - **Architecture impact** — which existing modules are affected and how
+   - **New modules or services required** — if any
+   - **Data flow** — how data moves through the feature
+   - **UI/UX considerations** — alignment with design-system.md
+   - **Potential risks and edge cases**
+   - **Concrete task list** — append to `planning/task-queue.md`
+   - **Architecture doc updates** — note what needs to change in `system-architecture.md`
+
+3. Do **not** write any code. Planning only.

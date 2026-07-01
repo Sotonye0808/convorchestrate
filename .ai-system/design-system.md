@@ -1,13 +1,15 @@
 # Design System
 
-This design system defines the initial visual language for the dashboard UI.
-It emphasizes clarity, strong hierarchy, and a warm, confident brand tone.
-The system is meant to be consistent across all admin pages and data-heavy views.
-Use these rules unless a feature explicitly requires a new pattern.
+> **Metadata**
+> - last-updated-by: migration-v1-to-v2
+> - last-verified-against-code: 2026-07-01
+> - staleness-policy: re-verify if UI components or styling dependencies change
+
+> **Overview:** Visual language, component patterns, and UX principles. Agents building UI must read this before writing any frontend code. The colour, typography, and spacing tables below are the **single source of truth** for design tokens (per `standards/engineering-principles.md` §5) — components must consume these tokens rather than redeclaring values.
+
+---
 
 ## Visual Language
-The visual language is modern and editorial with warm neutrals and sharp contrast.
-Tokens below define the base palette, typography, and spacing.
 
 ### Colour Palette
 
@@ -36,9 +38,9 @@ Tokens below define the base palette, typography, and spacing.
 
 Use a 4px base unit: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64.
 
+---
+
 ## Component Patterns
-These components should be reused across pages to maintain consistency.
-If a new component is required, document it here.
 
 ### Buttons
 - Primary: solid primary background, white text
@@ -60,14 +62,16 @@ If a new component is required, document it here.
 ### Modals / Dialogs
 - Centered modal with overlay, primary CTA on right
 
+---
+
 ## UX Principles
-These principles define how the UI should feel to operators.
-They apply to every page and interaction.
 
 1. Always show loading and empty states for async data
 2. Destructive actions require confirmation
 3. Errors must explain how to recover
 4. All views must remain usable at 320px wide
+
+---
 
 ## Responsive Breakpoints
 
@@ -78,12 +82,11 @@ They apply to every page and interaction.
 | lg | 1024px | Desktop |
 | xl | 1280px | Wide screens |
 
+---
+
 ## Accessibility Requirements
-These are the minimum standards for WCAG AA alignment.
-Do not ship UI that fails these checks.
 
 - All interactive elements must have keyboard focus states
 - Colour contrast must meet WCAG AA (4.5:1 for text)
 - Images must have alt text
 - Forms must have associated labels
-

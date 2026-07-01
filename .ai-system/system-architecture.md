@@ -1,14 +1,15 @@
 # System Architecture
 
-Convorchestrate is a Turborepo monorepo with three apps and five shared packages.
-The API handles orchestration, the worker executes background jobs, and the dashboard provides admin UX.
-Core workflow logic lives in packages/core and must remain adapter-agnostic.
-State is stored in PostgreSQL with Redis used for queueing and session/memory access.
-This document maps how modules connect and where configuration lives.
+> **Metadata**
+> - last-updated-by: migration-v1-to-v2
+> - last-verified-against-code: 2026-07-01
+> - staleness-policy: re-verify before trusting if any architecture-affecting commits have been made since last-verified-against-code
+
+> **Overview:** How the system is structured — layers, modules, data flow, and configuration. Agents designing or changing structure must read this first.
+
+---
 
 ## Architecture Diagram
-This diagram summarizes the main request and message flow at a high level.
-It focuses on the WhatsApp ingestion path and admin dashboard traffic.
 
 ```
 Dashboard (React)
@@ -24,12 +25,12 @@ WhatsApp (whatsapp-web.js adapter)
             -> Worker -> Core Engine
 ```
 
+---
+
 ## Module Breakdown
-Each module has a single responsibility and clear boundaries.
-Core must not import adapters; apps orchestrate the wiring.
 
 | Module | Responsibility | Key Files | Dependencies |
-|--------|----------------|-----------|--------------|
+|--------|---------------|-----------|--------------|
 | apps/api | HTTP API, orchestration, adapter wiring | apps/api/src/main.ts | packages/core, packages/memory, packages/adapters, packages/utils |
 | apps/worker | BullMQ processors and background jobs | apps/worker/src/main.ts | packages/core, packages/memory, packages/utils |
 | apps/dashboard | Admin UI for workflows, contacts, campaigns | apps/dashboard/src/main.tsx | API only |
@@ -42,9 +43,9 @@ Core must not import adapters; apps orchestrate the wiring.
 | infrastructure | Dockerfiles and compose | infrastructure/ | none |
 | scripts | DB seed scripts | scripts/ | TypeORM |
 
+---
+
 ## Data Flow
-The standard flow for inbound messages runs through the queue and engine.
-The admin dashboard uses a typical REST flow to manage config and view logs.
 
 ### Standard Request Flow
 ```
@@ -62,11 +63,12 @@ TypeORM -> PostgreSQL (tenants, workflows, sessions, contacts, logs)
 Redis -> sessions, queue state
 ```
 
+---
+
 ## Configuration Points
-Configuration is centralized via environment variables and tenant config JSON.
-No hardcoded operational values should appear outside these settings.
 
 | Config Key | Purpose | Location | Default |
+|-----------|---------|----------|---------|
 | NODE_ENV | environment mode | .env | development |
 | DATABASE_URL | Postgres connection | .env | local |
 | REDIS_URL | Redis connection | .env | local |
@@ -74,30 +76,33 @@ No hardcoded operational values should appear outside these settings.
 | WA_SESSION_DATA_PATH | WA session storage | .env | /app/data/wa-sessions |
 | MEDIA_UPLOAD_PATH | media storage path | .env | /app/data/uploads |
 
+All config points listen above should follow the fallback discipline from `standards/engineering-principles.md` §1 and §3 — every config-driven value must have a documented, safe fallback so the system degrades gracefully if the value is missing or malformed.
+
+---
+
 ## Tech Stack
-These are the core technologies in use.
-Add new dependencies here if introduced.
 
 | Layer | Technology | Version |
+|-------|-----------|---------|
 | Frontend | React + Vite + Tailwind | 18 / latest |
 | Backend | NestJS + Fastify | 10 |
 | Database | PostgreSQL | 16 |
 | Cache/Queue | Redis + BullMQ | 7 |
 | Auth | JWT | - |
 
+---
+
 ## Known Constraints & Technical Debt
-These constraints are non-negotiable and guide design decisions.
-Technical debt should be logged here if it impacts architecture.
 
 - Core must not import adapters
 - Every DB query must include tenant_id
 - Workflow behavior must be defined in JSON config
 - Queue-based processing for inbound messages
+- `import type` breaks NestJS DI — must use `import { Cls, type SomeType }` pattern
+- Fastify 4 plugin compat: pin `@fastify/*` plugins to Fastify 4-compatible majors
+
+---
 
 ## Architecture History
-This log captures major architectural changes.
-Entries should be appended when structure changes.
 
-| Date | Change | Reason |
-| 2026-05-06 | Initial monorepo scaffold and AI system setup | Project start |
-
+See `memory/architecture-history.md` for full chronology.

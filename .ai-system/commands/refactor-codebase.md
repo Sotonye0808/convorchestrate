@@ -1,60 +1,56 @@
 # Refactor Codebase Command
 
-> **Overview:** Use this to improve the structure, modularity, or design of existing code. The agent analyzes the repo, proposes changes, updates documentation, and implements safely — without breaking unrelated modules.
+> **Metadata**
+> - last-updated-by: bootstrap-project
+> - last-verified-against-code: (set on first run)
+> - staleness-policy: re-verify if refactoring conventions change
+
+> **Overview:** Structural improvement without behavioural change. Analyzes current code, proposes a better structure, updates docs, and implements safely one module at a time.
 
 ---
 
-## Prompt
+## Contract
 
-```
-Read the following:
-- .ai-context.md
-- .ai-system/agents/system-architecture.md
-- .ai-system/index/repo-map.md
-- .ai-system/index/dependency-graph.md
-- .ai-system/memory/project-decisions.md
-
-TASK: Refactor the codebase to improve quality.
-
-Steps:
-1. Analyze current folder structure and identify problems
-   - tight coupling
-   - repeated logic
-   - missing abstractions
-   - config hardcoded in source files
-   - modules doing too many things
-
-2. Propose a refactored architecture
-   - describe new folder structure
-   - define module boundaries
-   - identify what moves where
-
-3. Update .ai-system/agents/system-architecture.md with proposed changes
-
-4. Add refactoring tasks to .ai-system/planning/task-queue.md
-
-5. Implement the refactor safely
-   - move one module at a time
-   - verify imports still resolve
-   - do not change logic — only structure, unless instructed
-
-6. After completion:
-   - update repo-map.md
-   - update dependency-graph.md
-   - log the refactor in dev-history.md
-```
+| Guarantees | Does NOT |
+|------------|----------|
+| Preserves all existing behaviour | Does not change logic — only structure |
+| Updates all relevant .ai-system docs | Does not skip the quality gate |
+| Moves one module at a time with verification steps | Does not add new features during refactor |
+| Writes in-progress.md before starting | Does not make assumptions about specific AI tools |
 
 ---
 
-## With Directive
+## Required Inputs
+
+A refactoring goal.
+
+## Optional Directives
 
 ```
 Execute command: refactor-codebase.md
-Directive: [your refactor goal]
+Directive: [refactoring goal]
 
-Examples:
-Directive: convert the project to a config-driven modular architecture
-Directive: extract all database logic into a dedicated data access layer
-Directive: standardise all API responses through a single response formatter utility
+Directive: Convert the project to a config-driven modular architecture
+Directive: Extract all database logic into a dedicated data access layer
+Directive: Standardise all API responses through a single response formatter utility
 ```
 
+---
+
+## Execution
+
+1. Read `system-architecture.md`, `index/repo-map.md`, `index/dependency-graph.md`, `memory/project-decisions.md`.
+
+2. **Analyze** — identify problems: tight coupling, repeated logic, missing abstractions, hardcoded config, modules doing too many things.
+
+3. **Propose** — describe the refactored structure, new module boundaries, and what moves where.
+
+4. **Update architecture doc** — `system-architecture.md` with proposed changes before touching code.
+
+5. **Add tasks** — append refactoring tasks to `planning/task-queue.md`.
+
+6. **Implement** — one module at a time. After each move: verify imports resolve, verify behaviour unchanged.
+
+7. **After completion** — update `index/repo-map.md`, `index/dependency-graph.md`, log in `summaries/dev-history.md`.
+
+8. **Quality gate** — run `verify-work.md` to confirm behaviour is preserved.

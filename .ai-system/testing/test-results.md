@@ -1,6 +1,11 @@
 # Test Results
 
-> **Overview:** Latest test run results. Updated by agents after running the self-heal loop or test suite. Gives a quick snapshot of current project health.
+> **Metadata**
+> - last-updated-by: migration-v1-to-v2
+> - last-verified-against-code: 2026-07-01
+> - staleness-policy: overwritten on every test run — always current
+
+> **Overview:** Latest test run results. Updated by agents after running tests. Gives a quick snapshot of current project health.
 
 ---
 

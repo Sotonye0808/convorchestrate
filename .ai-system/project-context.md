@@ -1,17 +1,21 @@
 # Project Context
 
-Convorchestrate is a SaaS platform for orchestrating WhatsApp workflows.
-It focuses on predictable, config-driven interactions rather than open chat.
-The platform targets teams who need to automate verification, marketing, or mediation.
-This document explains the purpose, users, and constraints driving the build.
+> **Metadata**
+> - last-updated-by: migration-v1-to-v2
+> - last-verified-against-code: 2026-07-01
+> - staleness-policy: re-verify if >10 sessions old or after major scope changes
+
+> **Overview:** Why this project exists, who it serves, and what constraints govern development. Agents should read this to understand the "why" behind the work.
+
+---
 
 ## Project Purpose
-The goal is to run WhatsApp workflows using JSON configuration and a reliable engine.
-The system must support multi-tenant operation and safe orchestration at scale.
+
+Convorchestrate is a SaaS platform for orchestrating WhatsApp workflows. It focuses on predictable, config-driven interactions rather than open chat. The platform targets teams who need to automate verification, marketing, or mediation.
+
+---
 
 ## Target Users
-These users manage and monitor workflows via the admin dashboard.
-They need clear visibility into contacts, sessions, and outcomes.
 
 | User Type | Needs | Key Interactions |
 |-----------|-------|-----------------|
@@ -19,25 +23,26 @@ They need clear visibility into contacts, sessions, and outcomes.
 | Operator | Monitor sessions and campaigns | View logs, launch campaigns |
 | Analyst | Review outcomes and tags | Export data, inspect sessions |
 
+---
+
 ## Business Constraints
-These constraints are non-negotiable and should guide all decisions.
-They come directly from the build plan and architecture rules.
 
 - Multi-tenant isolation on every query
 - Config-driven behavior, no hardcoded workflow logic
 - Free stack only, self-hostable infrastructure
 - Adapter isolation between core and channels
 
+---
+
 ## Current Project Phase
-This project is in active development. All 8 build phases are complete (scaffold → hardening).
-The API app starts successfully with all modules initialized and all routes mapped.
 
 Phase: Active Development
-Active sprint focus: Testing, demo mode, and deployment
+
+Active sprint focus: Demo mode, local testing, deployment preparation
+
+---
 
 ## Tech Decisions Already Made
-These decisions are locked unless explicitly revisited.
-They reflect the plan in .ai-system/docs/build-plan.md.
 
 | Decision | Reason |
 |----------|--------|
@@ -47,9 +52,9 @@ They reflect the plan in .ai-system/docs/build-plan.md.
 | whatsapp-web.js | Most maintained WhatsApp Web adapter |
 | Config-driven workflows | Avoid hardcoded business rules |
 
+---
+
 ## Out of Scope
-This scope list prevents early feature creep.
-Items here should not be built in the MVP.
 
 - AI/NLP message processing
 - OCR-based verification
@@ -57,11 +62,10 @@ Items here should not be built in the MVP.
 - Official WhatsApp Business API integration
 - Payments and billing
 
+---
+
 ## External Integrations
-Only required external integrations are listed here.
-Keep this list minimal and self-hostable.
 
 | Service | Purpose | Auth Method |
 |---------|---------|------------|
 | WhatsApp Web | Message transport | LocalAuth session |
-

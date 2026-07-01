@@ -1,9 +1,13 @@
 # Repository Map
 
-This file maps the current folder structure of the monorepo.
-It helps agents quickly locate code and understand module boundaries.
-Update it when the directory layout changes.
-Paths here reflect the current scaffold.
+> **Metadata**
+> - last-updated-by: migration-v1-to-v2
+> - last-verified-against-code: 2026-07-01
+> - staleness-policy: auto-regenerable — can be derived from `Get-ChildItem -Recurse` or `tree` command. Manual content only where intent cannot be derived from structure.
+
+> **Overview:** Visual map of the project folder structure with purpose descriptions. Updated when the folder structure changes. This file is **auto-regenerable** — use tool-based discovery (filesystem MCP, git ls-tree) for ground truth, and treat manual entries here as supplementary context, not primary navigation.
+
+---
 
 ## Folder Structure
 
@@ -25,6 +29,8 @@ convorchestrate/
 |-- .ai-system/       -> AI documentation system
 `-- package.json
 ```
+
+---
 
 ## Directory Descriptions
 
@@ -61,6 +67,8 @@ apps/api/src/modules/
 ├── settings/       Tenant config
 └── workflows/      Workflow CRUD
 ```
+
+---
 
 ## Entry Points
 

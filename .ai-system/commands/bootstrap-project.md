@@ -1,59 +1,72 @@
 # Bootstrap Project Command
 
-> **Overview:** Run this once per new repository to auto-generate the entire `.ai-system` documentation structure. It analyzes your actual codebase and populates all agent files with project-specific content.
+> **Metadata**
+> - last-updated-by: bootstrap-project
+> - last-verified-against-code: (set on completion)
+> - staleness-policy: run once per project — re-run only if project structure fundamentally changes
+
+> **Overview:** One-time project initialization. Analyzes the actual codebase and generates all `.ai-system` documentation files with project-specific content. Vendor-neutral — works with any AI tool.
 
 ---
 
-## Prompt (paste into Continue or Cline)
+## Contract
 
-```
-You are an AI development orchestrator initializing a structured AI engineering system.
-
-TASK: Analyze this repository and generate a complete .ai-system documentation structure.
-
-Steps:
-1. Scan the repository — detect languages, frameworks, folder structure, entry points, and dependencies
-2. Identify the main architectural patterns in use (MVC, service layer, monorepo, etc.)
-3. Create or update the following files with accurate, project-specific content:
-
-FILES TO GENERATE:
-- .ai-system/ai-context.md        → project overview, stack, key modules
-- .ai-system/agents/system-architecture.md  → actual architecture based on code scan
-- .ai-system/agents/design-system.md        → UI/UX patterns detected or to be defined
-- .ai-system/agents/project-context.md      → goals, constraints, stakeholders
-- .ai-system/agents/repair-system.md        → known issues and error patterns (empty if new project)
-- .ai-system/planning/project-plan.md       → high-level feature checklist
-- .ai-system/planning/task-queue.md         → immediate actionable tasks
-- .ai-system/index/repo-map.md             → folder structure and purpose of each directory
-- .ai-system/index/dependency-graph.md     → module relationships
-- .ai-system/checkpoints/session-log.md    → blank checkpoint template
-- .ai-system/memory/project-decisions.md   → blank decisions log
-- .ai-system/memory/lessons-learned.md     → blank lessons log
-- .ai-system/summaries/dev-history.md      → blank history log
-
-REQUIREMENTS FOR ALL FILES:
-- Begin every file with a short overview summary (3–5 sentences max)
-- Begin every major section with a 1–2 sentence summary paragraph
-- Keep language clear and skimmable — the goal is fast orientation
-- Architecture must reflect actual code, not assumptions
-- Task queue must contain real, actionable next steps
-
-Run this now and create all files.
-```
+| What this command guarantees | What it does NOT do |
+|------------------------------|---------------------|
+| Populates all .ai-system files with accurate, codebase-derived content | Does not install software, modify code, or set up tooling |
+| Creates freshness metadata on every file | Does not configure editor extensions or API keys |
+| Seeds the task queue with real, actionable next steps | Does not assume any specific AI product or model |
+| Produces architecture docs that reflect actual code | Does not invent structure that isn't there |
 
 ---
 
-## With Optional Directive
+## Required Inputs
 
-If you want to give the bootstrapper extra context:
+- A repository with actual code (or at minimum a defined directory structure)
+
+## Optional Directives
 
 ```
 Execute command: bootstrap-project.md
-Directive: [your instructions here]
+Directive: [additional context about the project]
 
 Examples:
-Directive: This is a Next.js + Node.js marketplace app. Focus on modular service architecture.
-Directive: Prioritize config-driven design and environment variable management in the task queue.
-Directive: The project is greenfield — generate opinionated starter architecture for a REST API.
+Directive: This is a Next.js marketplace — focus on modular service architecture
+Directive: The project uses Tailwind and Ant Design — include both in the design system
+Directive: This is greenfield — suggest an ideal architecture for a REST API
 ```
 
+---
+
+## Execution
+
+1. **Scan the repository.** Detect languages, frameworks, entry points, folder structure, dependencies, architectural patterns (MVC, service layer, monorepo, etc.).
+
+2. **For each file in `.ai-system/`**, produce project-specific content:
+   - `.ai-context.md` — project overview with actual stack, key modules
+   - `protocols/` — populate freshness metadata (these files are pre-written, just update the metadata header)
+   - `standards/engineering-principles.md` — stamp the metadata header (static doctrine file, no project-specific content needed)
+   - `system-architecture.md` — architecture diagram, module breakdown, data flow, config points
+   - `project-context.md` — goals, users, constraints, tech decisions
+   - `design-system.md` — detected UI patterns or templates to fill
+   - `repair-system.md` — pre-populate with known patterns for the detected tech stack
+   - `planning/project-plan.md` — feature checklist inferred from codebase
+   - `planning/task-queue.md` — immediate actionable tasks
+   - `index/repo-map.md` — folder structure with purpose of each directory
+   - `index/dependency-graph.md` — module relationships as text diagram
+   - `checkpoints/session-log.md` — first entry: "initial project scan and .ai-system setup"
+   - `checkpoints/in-progress.md` — clear/empty state
+   - `memory/project-decisions.md` — empty, ready for entries
+   - `memory/lessons-learned.md` — empty, ready for entries
+   - `memory/architecture-history.md` — initial entry
+   - `summaries/dev-history.md` — first entry
+   - `testing/test-plan.md` — template filled for detected stack
+   - `testing/test-results.md` — empty
+
+3. **Update freshness metadata** on every file: set `last-updated-by: bootstrap-project` and `last-verified-against-code: [current date]`.
+
+4. **Report.** List:
+   - What was generated
+   - Key architecture findings
+   - Recommended first tasks
+   - Any detected issues (missing config, inconsistent patterns, etc.)

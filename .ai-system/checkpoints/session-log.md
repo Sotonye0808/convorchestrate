@@ -1,24 +1,50 @@
-# Development Checkpoints - Session Log
+# Development Checkpoints — Session Log
 
-This log records what each session accomplished and what remains next.
-Use it to resume work without re-reading the full codebase.
-Keep entries concise and action-oriented.
-Every session should end with a new entry.
+> **Metadata**
+> - last-updated-by: migration-v1-to-v2
+> - last-verified-against-code: 2026-07-01
+> - staleness-policy: append-only — never modify past entries
+
+> **Overview:** Append-only running log of development sessions. Each entry records what was completed, what comes next, and which files were modified. Agents write here at the end of every session so work can be resumed without re-reading the entire codebase. This file is the **append-only historical record** — use `checkpoints/in-progress.md` for current in-progress work.
+
+---
+
+## Log Format
+
+```
+## Session [number] — [date]
+
+**Completed:**
+[What was finished this session]
+
+**Files Modified:**
+- [file path] — [what changed]
+
+**Next Task:**
+[Exact next step — be specific]
+
+**Assumptions Made:**
+[Any assumptions logged per the quality gate]
+
+**Notes / Blockers:**
+[Anything the next agent needs to know]
+```
+
+---
 
 ## Sessions
 
-## Session 1 - 2026-05-06
+## Session 1 — 2026-05-06
 
 **Completed:**
 Initial monorepo scaffold files created (apps, packages, infrastructure).
 
 **Files Modified:**
-
-- package.json - workspace setup
-- turbo.json - pipeline setup
-- apps/\* - placeholder main files
-- packages/\* - placeholder index files
-- infrastructure/\* - docker-compose and Dockerfiles
+- package.json — workspace setup
+- turbo.json — pipeline setup
+- apps/* — placeholder main files
+- packages/* — placeholder index files
+- infrastructure/* — docker-compose and Dockerfiles
 
 **Next Task:**
 Bootstrap .ai-system documentation and reconcile scaffold to plan.
@@ -26,19 +52,18 @@ Bootstrap .ai-system documentation and reconcile scaffold to plan.
 **Notes / Blockers:**
 Scaffold is minimal and missing entities, migrations, and per-package tsconfig.
 
-## Session 2 - 2026-05-06
+## Session 2 — 2026-05-06
 
 **Completed:**
 .ai-system documentation bootstrapped from build plan.
 
 **Files Modified:**
-
 - .ai-system/ai-context.md
-- .ai-system/agents/\*.md
-- .ai-system/planning/\*.md
-- .ai-system/index/\*.md
+- .ai-system/agents/*.md
+- .ai-system/planning/*.md
+- .ai-system/index/*.md
 - .ai-system/checkpoints/session-log.md
-- .ai-system/memory/\*.md
+- .ai-system/memory/*.md
 - .ai-system/summaries/dev-history.md
 
 **Next Task:**
@@ -47,20 +72,19 @@ Finish Phase 0: align scaffold, add entities, migrations, and run build.
 **Notes / Blockers:**
 None.
 
-## Session 3 - 2026-05-06
+## Session 3 — 2026-05-06
 
 **Completed:**
 Phase 0 scaffold reconciliation and build success.
 
 **Files Modified:**
-
-- package.json - workspace deps and scripts
-- apps/api/src/\* - app module, entities, data source, migration
-- apps/worker/src/\* - worker module and entrypoint
-- apps/dashboard/\* - Vite and Tailwind config
-- infrastructure/docker-compose.yml - full service stack
-- infrastructure/docker/\* - Dockerfiles
-- .env.example - environment template
+- package.json — workspace deps and scripts
+- apps/api/src/* — app module, entities, data source, migration
+- apps/worker/src/* — worker module and entrypoint
+- apps/dashboard/* — Vite and Tailwind config
+- infrastructure/docker-compose.yml — full service stack
+- infrastructure/docker/* — Dockerfiles
+- .env.example — environment template
 
 **Next Task:**
 Start Phase 1: workflow schema and engine core.
@@ -68,190 +92,122 @@ Start Phase 1: workflow schema and engine core.
 **Notes / Blockers:**
 Removed BullMQ deps from worker for Phase 0; add in Phase 5.
 
-## Session 4 - 2026-06-23
+## Session 4 — 2026-06-23
 
 **Completed:**
 Phase 1 — Engine Core + Phase 2 — WhatsApp Adapter + Phase 3 — Media & Tagging.
 
 **Files Modified:**
-
-- packages/schemas/src/workflow.schema.ts - Added persistState, all action types
-- packages/core/src/engine.ts - Reactive + sequential + mediation processing
-- packages/core/src/action-executor.ts - DefaultActionExecutor
-- packages/core/src/index.ts - Exports
-- packages/core/src/engine.test.ts - 8 tests
-- packages/adapters/src/ - WwjsAdapter, RateLimiter, ChannelAdapter interface
-- apps/api/src/ - MessagingModule, EngineModule, MediaModule
-- configs/workflows/ - 3 workflow JSON configs
-- configs/tenants/default.tenant.json - 7 templates
-
-**Architecture Review:**
-
-- isStateMutatingAction replaced with config-driven persistState
-- Core imports use package names (@convorchestrate/\*) not path aliases
-
-**Build & Test:**
-
-- npm run build: 8/8 packages succeeded
-- npm run test (packages/core): 8/8 tests passed
+- packages/schemas/src/workflow.schema.ts — Added persistState, all action types
+- packages/core/src/engine.ts — Reactive + sequential + mediation processing
+- packages/core/src/action-executor.ts — DefaultActionExecutor
+- packages/core/src/index.ts — Exports
+- packages/core/src/engine.test.ts — 8 tests
+- packages/adapters/src/ — WwjsAdapter, RateLimiter, ChannelAdapter interface
+- apps/api/src/ — MessagingModule, EngineModule, MediaModule
+- configs/workflows/ — 3 workflow JSON configs
+- configs/tenants/default.tenant.json — 7 templates
 
 **Next Task:**
 Start Phase 4: Sequential + Mediation workflows.
 
-## Session 5 - 2026-06-23
+## Session 5 — 2026-06-23
 
 **Completed:**
 Phases 4-8 all executed sequentially.
 
-**Phase 4 — Sequential + Mediation Workflows:**
-
-- WorkflowEngine.processSequential() and processMediation()
-- transition_step, delay, trigger_webhook, relay_to_party action handlers
-- MediationContext built in MessagingService, resolveMediationParty()
-- 4 new core tests
-
-**Phase 5 — BullMQ Queue System:**
-
-- QueueModule with QueueService (3 queues)
-- workflow-execution, delayed-message, webhook-trigger queues
-- All message processing through BullMQ, not inline
-
-**Phase 6 — Campaigns:**
-
-- Campaign entity, service, controller
-- CampaignService.launch() with rate-limited dispatch
-- Engine updated for campaign_start trigger
-
-**Phase 7 — Admin Dashboard:**
-
-- 7 backend API modules (Auth, Dashboard, Contacts, Workflows, Events, Sessions, Settings)
-- 7 React dashboard pages (Login, Dashboard, Workflows/Monaco, Contacts, Campaigns, Logs, Settings)
-
-**Phase 8 — Hardening + Deploy:**
-
-- Helmet, CORS, rate limiting (100 req/min/IP)
-- Pino structured logging
-- Health endpoint, event replay system
-- Multi-stage Dockerfiles, docker-compose auto-restart policies
-- .env.example with all variables
-
-**Build & Test:**
-
-- npm run build: 8/8 packages succeeded
-- npm run test (packages/core): 13/13 tests passed (reactive + sequential + mediation)
+**Files Modified:**
+- packages/core/src/engine.ts — processSequential(), processMediation()
+- packages/core/src/action-executor.ts — transition_step, delay, trigger_webhook, relay_to_party
+- apps/api/src/modules/queue/ — QueueModule, QueueService, processors
+- apps/api/src/modules/campaigns/ — Campaign entity, service, controller
+- apps/dashboard/src/ — 7 pages, auth context, layout
+- apps/api/src/main.ts — Helmet, CORS, rate limiting, pino
+- infrastructure/ — Multi-stage Dockerfiles
 
 **Next Task:**
+Add demo/preview mode with simulated message endpoint. Write local testing guide. Write deployment guide.
 
-- Add demo/preview mode with simulated message endpoint
-- Write local testing guide
-- Write deployment guide
-
-**Notes / Blockers:**
-All 8 build phases are complete. The system is ready for local testing, deployment, and demo mode setup.
-
-## Session 6 - 2026-06-24
+## Session 6 — 2026-06-24
 
 **Completed:**
+Setup reconciliation, DB migrations, build fixes, and full app startup verification.
 
-- Setup reconciliation, DB migrations, build fixes, and full app startup verification.
-
-**Database:**
-
-- Dropped/ recreated `convorchestrate` DB fresh
-- Ran `InitSchema20260506000000` migration (all 8 original tables)
-- Ran `AddCampaignsAndFixNullable1717171200000` migration (added `campaigns` table, made `party_b_contact_id` nullable)
-
-**Code Changes:**
-
-- `apps/api/src/db/data-source.ts` — Added `Campaign` entity to entities list
-- `apps/api/src/app.module.ts` — Added `QueueModule` import, `ConfigModule.forRoot({ envFilePath })` pointing to root `.env`
-- `apps/api/src/modules/queue/delayed-message.processor.ts` — Fixed `import type { QueueService }` → `import { QueueService, type DelayedMessageJob }` (Nest DI fails silently on type-only imports)
-- `apps/api/src/modules/queue/webhook.processor.ts` — Same `import type` fix
-- `apps/api/src/db/migrations/1717171200000-AddCampaignsAndFixNullable.ts` — New migration written manually (typeorm:generate was overly destructive)
-
-**Dependency Fixes:**
-
-- `@fastify/helmet` downgraded v13→v11 (Fastify 5 peer dep)
-- `@fastify/rate-limit` downgraded v11→v9 (Fastify 5 peer dep)
-- `@fastify/multipart` downgraded v9→v8 (Fastify 5 peer dep)
-
-**Build & Test:**
-
-- `npm run build`: 8/8 packages succeeded (tsc clean)
-- `node dist/main.js`: App starts successfully, all 22 modules initialized, all 23 API routes mapped, no errors
+**Files Modified:**
+- apps/api/src/db/data-source.ts — Added Campaign entity, .env loading for CLI
+- apps/api/src/app.module.ts — Added QueueModule, ConfigModule envFilePath fix
+- apps/api/src/modules/queue/delayed-message.processor.ts — Fixed import type
+- apps/api/src/modules/queue/webhook.processor.ts — Fixed import type
+- apps/api/src/db/migrations/1717171200000-AddCampaignsAndFixNullable.ts — New migration
 
 **Next Task:**
 Deploy + demo mode or write integration tests.
 
-**Notes / Blockers:**
-
-- `ConfigModule.forRoot()` needs explicit `envFilePath` because `.env` is at project root, not in `apps/api/`
-- The `envFilePath` must use `../../../.env` (not `../../.env`) because from `apps/api/src/` you need to go up 3 levels (`src → api → apps → root`) to reach the project root. When compiled in `apps/api/dist/`, 3 levels also works. The previous `../../.env` only went up to `apps/` and was never loading the env file — so the app always crashed on `npm run dev`.
-- `import type` breaks NestJS DI because type-only imports are erased at compile time — the `QueueService` symbol doesn't exist at runtime for reflect-metadata to inspect
-- `@fastify/*` plugins that target Fastify 5.x don't work with NestJS 10's bundled Fastify 4.x — always pin to Fastify 4-compatible versions
-
-## Session 7 - 2026-06-24
+## Session 7 — 2026-06-24
 
 **Completed:**
+Fixed TypeORM migration CLI env loading.
 
-- Fixed TypeORM migration CLI env loading so `npm run migration:run` reads the repo-root `.env` correctly.
-
-**Code Changes:**
-
-- `apps/api/src/db/data-source.ts` — Load `.env` explicitly for TypeORM CLI and validate `DATABASE_URL` before creating the data source
-
-**Validation:**
-
-- `npm run migration:run` now completes and reports `No migrations are pending`
+**Files Modified:**
+- apps/api/src/db/data-source.ts — Load .env explicitly for TypeORM CLI
 
 **Next Task:**
+Continue with demo mode, local testing, or deployment documentation.
 
-- Continue with demo mode, local testing, or deployment documentation.
-
-**Notes / Blockers:**
-
-- TypeORM CLI does not inherit Nest `ConfigModule` bootstrapping, so the data source must load env variables itself.
-
-## Session 8 - 2026-06-24
+## Session 8 — 2026-06-24
 
 **Completed:**
+Fixed missing global /api route prefix.
 
-- Fixed the missing global `/api` route prefix so demo and dashboard endpoints resolve at the documented URLs.
-
-**Code Changes:**
-
-- `apps/api/src/main.ts` — Added `app.setGlobalPrefix("api")`
-
-**Validation:**
-
-- `apps/api` build passed with `npm run build`
+**Files Modified:**
+- apps/api/src/main.ts — Added `app.setGlobalPrefix("api")`
 
 **Next Task:**
+Re-test POST /api/demo/seed and dashboard demo controls.
 
-- Re-test `POST /api/demo/seed` and the dashboard demo controls against the running API.
-
-**Notes / Blockers:**
-
-- None.
-
-## Session 9 - 2026-06-24
+## Session 9 — 2026-06-24
 
 **Completed:**
+Made WhatsApp adapter startup non-fatal.
 
-- Made WhatsApp adapter startup non-fatal so a stale browser profile lock no longer blocks API boot.
-
-**Code Changes:**
-
-- `apps/api/src/modules/messaging/messaging.service.ts` — Catch `WwjsAdapter.initialize()` failures and continue serving API routes
-
-**Validation:**
-
-- `apps/api` build passed with `npm run build`
+**Files Modified:**
+- apps/api/src/modules/messaging/messaging.service.ts — Catch initialize() failures
 
 **Next Task:**
+Re-run the API and, if needed, clean up locked wa-sessions profile.
 
-- Re-run the API and, if needed, clean up the locked `wa-sessions` profile separately.
+## Session 11 — 2026-07-01
+
+**Completed:**
+Ran `update-ai-system.md` — full post-migration drift audit.
+
+**Files Modified:**
+- .ai-system/index/dependency-graph.md — corrected module dep map, expanded external deps (9 -> 31 entries)
+- .ai-system/summaries/dev-history.md — added drift sync entry
+- .ai-system/checkpoints/session-log.md — this entry
+
+**Next Task:**
+Demo/preview mode, local testing setup, deployment guide.
+
+**Assumptions Made:**
+None.
 
 **Notes / Blockers:**
+Significant drift found in dependency graph: worker claimed deps on core/memory/utils but has none; core claimed deps on utils but has none; external deps table was missing ~22 packages. All corrected.
 
-- WhatsApp connectivity may be unavailable until the browser profile lock is cleared, but the API can now start.
+## Session 10 — 2026-07-01
+
+**Completed:**
+Migrated .ai-system from v1 to v2. All documentation updated.
+
+**Files Modified:**
+- .ai-system/ (entire directory restructured to v2 layout)
+
+**Next Task:**
+Demo/preview mode, local testing setup, deployment guide.
+
+**Assumptions Made:**
+None.
+
+**Notes / Blockers:**
+Migration complete. See MIGRATION.md for details on changes between v1 and v2.

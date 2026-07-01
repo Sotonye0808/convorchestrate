@@ -1,56 +1,52 @@
 # Update AI System Command
 
-> **Overview:** Maintenance command. Run at the end of a sprint or after major changes to keep all agent documentation synchronized with the actual state of the codebase.
+> **Metadata**
+> - last-updated-by: bootstrap-project
+> - last-verified-against-code: (set on first run)
+> - staleness-policy: re-verify if sync procedure changes
+
+> **Overview:** Sprint-end deep synchronization. Reads all `.ai-system/` files and compares them against the current repository state. Fixes drift that accumulated during the sprint. Heavier than `sync-context.md`.
 
 ---
 
-## Prompt
+## Contract
 
-```
-Read all files in .ai-system/ and compare them against the current repository state.
-
-TASK: Synchronize the AI development system with the codebase.
-
-Update the following:
-1. .ai-system/index/repo-map.md
-   - reflect any new or removed directories
-   - update purpose descriptions if modules changed
-
-2. .ai-system/index/dependency-graph.md
-   - update module relationships
-   - flag new dependencies introduced
-
-3. .ai-system/index/file-summaries/
-   - generate or update summaries for modified modules
-   - remove summaries for deleted files
-
-4. .ai-system/agents/system-architecture.md
-   - flag any architecture drift (code doesn't match docs)
-   - update architecture to reflect current state
-
-5. .ai-system/planning/project-plan.md
-   - mark completed items [x]
-   - add newly discovered tasks
-
-6. .ai-system/summaries/dev-history.md
-   - add a sprint summary for work completed
-
-7. .ai-system/memory/lessons-learned.md
-   - document any recurring issues or newly discovered patterns
-
-Report what was updated and what inconsistencies were found.
-```
+| Guarantees | Does NOT |
+|------------|----------|
+| Reconciles all .ai-system docs with actual code state | Does not change code to match docs — only docs to match code |
+| Flags architecture drift for human review | Does not make assumptions about specific AI tools |
+| Updates all freshness metadata | Does not skip drift that is inconvenient to fix |
+| Produces a discrepancy report | Does not run automatically — must be explicitly invoked |
 
 ---
 
-## With Directive
+## Required Inputs
+
+None — operates on the full `.ai-system/` directory and the repo.
+
+## Optional Directives
 
 ```
 Execute command: update-ai-system.md
-Directive: [focus area if needed]
+Directive: [focus area]
 
-Examples:
 Directive: Focus on updating summaries after the authentication module refactor
 Directive: Specifically check for architecture drift in the services layer
 ```
 
+---
+
+## Execution
+
+1. Read all files in `.ai-system/` and compare against repo state.
+
+2. Update:
+   - `index/repo-map.md` — reflect new/removed directories, update purpose descriptions
+   - `index/dependency-graph.md` — update module relationships, flag new dependencies
+   - `system-architecture.md` — flag any architecture drift, update to match current state
+   - `planning/project-plan.md` — mark completed items, add newly discovered tasks
+   - `summaries/dev-history.md` — add a sprint summary
+   - `memory/lessons-learned.md` — document recurring issues or new patterns
+   - `repair-system.md` — add any new errors encountered
+
+3. **Report** what was updated and what inconsistencies were found.
