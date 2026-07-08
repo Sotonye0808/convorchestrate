@@ -51,7 +51,10 @@ export class MessagingService {
     ) {
         const send = (phone: string, text: string) =>
             this.metaApiClient.sendText(phone, text);
+        const sendTemplate = (phone: string, templateName: string, language: string, components?: any) =>
+            this.metaApiClient.sendTemplate(phone, templateName, language, components);
         this.engineService.setSendFunction(send);
+        this.engineService.setSendTemplateFunction(sendTemplate);
         this.delayedMessageProcessor.setSendFunction(send);
         this.queueService.setWorkflowHandler((job) => {
             return this.engineService.process(job.config, job.ctx);

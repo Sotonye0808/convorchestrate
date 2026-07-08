@@ -28,7 +28,7 @@ export class WebhooksService {
                     if (!msg) continue;
 
                     const now = new Date();
-                    const updates: Partial<CampaignMessage> = { status: statusStr };
+                    const updates: Record<string, unknown> = { status: statusStr };
 
                     switch (statusStr) {
                         case "sent":
@@ -48,7 +48,7 @@ export class WebhooksService {
                     }
 
                     try {
-                        await this.campaignMessageRepo.update(msg.id, updates);
+                        await this.campaignMessageRepo.update(msg.id, updates as any);
                     } catch (error) {
                         this.logger.error("failed_to_update_campaign_message", {
                             wamid,

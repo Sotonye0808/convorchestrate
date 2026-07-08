@@ -1,4 +1,6 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Campaign } from "./campaign.entity";
+import { Contact } from "./contact.entity";
 
 @Entity({ name: "campaign_messages" })
 @Index(["campaignId"])
@@ -14,8 +16,16 @@ export class CampaignMessage {
     @Column({ name: "campaign_id", type: "uuid" })
     campaignId!: string;
 
+    @ManyToOne(() => Campaign, (c) => c.messages)
+    @JoinColumn({ name: "campaign_id" })
+    campaign?: Campaign;
+
     @Column({ name: "contact_id", type: "uuid" })
     contactId!: string;
+
+    @ManyToOne(() => Contact)
+    @JoinColumn({ name: "contact_id" })
+    contact?: Contact;
 
     @Column({ type: "varchar", length: 30 })
     phone!: string;

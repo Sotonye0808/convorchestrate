@@ -1,8 +1,8 @@
 # Project Context
 
 > **Metadata**
-> - last-updated-by: migration-v1-to-v2
-> - last-verified-against-code: 2026-07-01
+> - last-updated-by: update-ai-system (R3 sync)
+> - last-verified-against-code: 2026-07-08
 > - staleness-policy: re-verify if >10 sessions old or after major scope changes
 
 > **Overview:** Why this project exists, who it serves, and what constraints govern development. Agents should read this to understand the "why" behind the work.
@@ -30,15 +30,15 @@ Convorchestrate is a SaaS platform for orchestrating WhatsApp workflows. It focu
 - Multi-tenant isolation on every query
 - Config-driven behavior, no hardcoded workflow logic
 - Free stack only, self-hostable infrastructure
-- Adapter isolation between core and channels
+- Meta Cloud API as the sole WhatsApp transport (whatsapp-web.js removed)
 
 ---
 
 ## Current Project Phase
 
-Phase: Active Development
+Phase: Active Development — R5 (Config-Driven Workflow Integration)
 
-Active sprint focus: Demo mode, local testing, deployment preparation
+Active sprint focus: Port workflow JSON schema from packages/schemas, create packages/workflow-engine, implement workflow actions, wire engine into campaign launch, write unit tests.
 
 ---
 
@@ -70,4 +70,3 @@ Active sprint focus: Demo mode, local testing, deployment preparation
 | Service | Purpose | Auth Method |
 |---------|---------|------------|
 | Meta WhatsApp Cloud API | Message transport (templates, images, text) | OAuth Bearer token |
-| WhatsApp Web | Optional legacy transport (via whatsapp-web.js, deprecated) | LocalAuth session |

@@ -21,6 +21,7 @@ export class DefaultActionExecutor implements ActionExecutor {
                 return;
 
             case "send_message":
+            case "send_template_message":
             case "tag_user":
             case "store_media":
             case "trigger_webhook":

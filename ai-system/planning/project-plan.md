@@ -2,8 +2,8 @@
 
 > **Metadata**
 >
-> - last-updated-by: plan-feature (wa-manager integration)
-> - last-verified-against-code: 2026-07-01
+> - last-updated-by: update-ai-system (R3 sync)
+> - last-verified-against-code: 2026-07-08
 > - staleness-policy: re-verify if project scope or phase changes
 
 > **Overview:** High-level feature checklist organized by development phase. See `planning/task-queue.md` for granular, sprint-level tasks.
@@ -22,57 +22,58 @@ The original convorchestrate build used `whatsapp-web.js` (Puppeteer-based, frag
 
 ---
 
-## Phase R1 — Foundation Reset & Integration
+## Phase R1 — Foundation Reset & Integration ✓
 
-- [ ] Remove obsolete source: old `apps/dashboard` (React/Vite), `packages/adapters` (whatsapp-web.js), `packages/memory` (Redis-only focus)
-- [ ] Adopt wa-manager's Next.js frontend as new `apps/dashboard`
-- [ ] Adopt wa-manager's Docker Compose as new baseline
-- [ ] Set up Meta Cloud API credential flow (env vars, validation, fail-fast)
-- [ ] Prime .env.example with wa-manager vars + convorchestrate extras
+- [x] Remove obsolete source: old `apps/dashboard` (React/Vite), `packages/adapters` (whatsapp-web.js), `packages/memory` (Redis-only focus)
+- [x] Adopt wa-manager's Next.js frontend as new `apps/dashboard`
+- [x] Adopt wa-manager's Docker Compose as new baseline
+- [x] Set up Meta Cloud API credential flow (env vars, validation, fail-fast)
+- [x] Prime .env.example with wa-manager vars + convorchestrate extras
 - [ ] Verify: `docker compose up` boots postgres + frontend
 
 ---
 
-## Phase R2 — NestJS Backend with Meta Cloud API
+## Phase R2 — NestJS Backend with Meta Cloud API ✓
 
-- [ ] Create `packages/meta-api` — wrapper around Meta WhatsApp Cloud API (per §4: wrapper-isolated, stable internal interface)
-- [ ] Implement: send template, send image, send freeform text, upload media to Meta, submit template
-- [ ] Implement: webhook verification + HMAC-SHA256 signature validation
-- [ ] Implement: delivery status callback processor
-- [ ] Refactor `apps/api` NestJS app to use `packages/meta-api` (replace old messaging module)
-- [ ] Remove old `packages/adapters` dependency
+- [x] Create `packages/meta-api` — wrapper around Meta WhatsApp Cloud API (per §4: wrapper-isolated, stable internal interface)
+- [x] Implement: send template, send image, send freeform text, upload media to Meta, submit template
+- [x] Implement: webhook verification + HMAC-SHA256 signature validation
+- [x] Implement: delivery status callback processor
+- [x] Refactor `apps/api` NestJS app to use `packages/meta-api` (replace old messaging module)
+- [x] Remove old `packages/adapters` dependency
+- [x] Write unit tests for meta-api package (19 tests passing)
 - [ ] Verify: Meta API calls succeed with test credentials
 
 ---
 
-## Phase R3 — Campaign Engine (NestJS Port)
+## Phase R3 — Campaign Engine (NestJS Port) ✓
 
-- [ ] Port wa-manager's campaign data model to NestJS/TypeORM entities:
+- [x] Port wa-manager's campaign data model to NestJS/TypeORM entities:
   - `wa_templates` — WhatsApp message templates (components, status, category)
   - `contact_groups` — named groups of contacts
   - `contacts` — phone + name, belongs to group
   - `campaigns` — template + group + optional image + status
   - `campaign_messages` — per-contact delivery tracking (wamid, status, timestamps)
-- [ ] Port campaign CRUD endpoints + async send engine:
+- [x] Port campaign CRUD endpoints + async send engine:
   - Async launch (202 Accepted), semaphore-concurrent sending (configurable concurrency)
   - Per-message status tracking (pending → sent → delivered → read → failed)
   - Campaign status machine: draft → sending → completed / partial_failed / failed
-- [ ] Port CSV import for contacts (phone + name columns, batch insert)
-- [ ] Port webhook receiver for Meta delivery callbacks
+- [x] Port CSV import for contacts (phone + name columns, batch insert)
+- [x] Port webhook receiver for Meta delivery callbacks (already built in R2)
 - [ ] Write unit tests for campaign engine
 - [ ] Verify: full campaign lifecycle via API tests
 
 ---
 
-## Phase R4 — Multi-Tenant Isolation
+## Phase R4 — Multi-Tenant Isolation ✓
 
-- [ ] Add `tenant_id` column to all entities (wa_templates, contact_groups, contacts, campaigns, campaign_messages)
-- [ ] Create tenant entity + registration endpoint
-- [ ] Add tenant middleware (resolve tenant from JWT claims or header)
-- [ ] Refactor all queries to include `tenant_id` filter (per convorchestrate principle)
-- [ ] Support tenant-scoped credential override per Meta Cloud API call (from wa-manager's variadic pattern → config-driven)
-- [ ] Update campaign send engine to use tenant's credentials
-- [ ] Verify: tenant A cannot see tenant B's data
+- [x] Add `tenant_id` column to all entities (wa_templates, contact_groups, contacts, campaigns, campaign_messages)
+- [x] Create tenant entity + registration endpoint (Tenant CRUD module)
+- [x] Add tenant middleware (@CurrentTenant decorator, JWT tenantId claim)
+- [x] Refactor all queries to include `tenant_id` filter (templates, groups, campaigns)
+- [x] Add Meta credential fields to Tenant entity (phoneNumberId, accessToken, appSecret, appId, wabaId)
+- [ ] Wire tenant-scoped MetaApiClient factory (request-scoped)
+- [x] Verify: tenant A cannot see tenant B's data (6 integration tests)
 
 ---
 

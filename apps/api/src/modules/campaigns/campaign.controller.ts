@@ -1,63 +1,51 @@
-import { Controller, Post, Get, Param, Body, HttpCode, HttpStatus, NotFoundException, BadRequestException } from "@nestjs/common";
+import { Controller, Post, Get, Param, Body, HttpCode, HttpStatus, Delete, Logger, UseGuards } from "@nestjs/common";
 import { CampaignService } from "./campaign.service";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { CurrentTenant } from "../../common/decorators/current-tenant.decorator";
 
 @Controller("campaigns")
+@UseGuards(JwtAuthGuard)
 export class CampaignController {
+    private readonly logger = new Logger(CampaignController.name);
+
     constructor(private readonly campaignService: CampaignService) { }
 
-    @Post()
-    @HttpCode(HttpStatus.CREATED)
-    async create(
-        @Body() body: {
-            tenantId: string;
-            name: string;
-            workflowId: string;
-            contactList: string[];
-        },
-    ) {
-        if (!body.tenantId || !body.name || !body.workflowId || !body.contactList?.length) {
-            throw new BadRequestException("tenantId, name, workflowId, and contactList are required");
-        }
-
-        const campaign = await this.campaignService.create(body);
-        return campaign;
-    }
-
     @Get()
-    async findAll(
-        @Body("tenantId") tenantId?: string,
-    ) {
-        if (!tenantId) {
-            throw new BadRequestException("tenantId is required");
-        }
+    async findAll(@CurrentTenant() tenantId: string) {
         return this.campaignService.findAll(tenantId);
     }
 
     @Get(":id")
-    async findById(
-        @Param("id") id: string,
-        @Body("tenantId") tenantId?: string,
-    ) {
-        if (!tenantId) {
-            throw new BadRequestException("tenantId is required");
-        }
-        const campaign = await this.campaignService.findById(tenantId, id);
-        if (!campaign) {
-            throw new NotFoundException("campaign_not_found");
-        }
-        return campaign;
+    async findOne(@CurrentTenant() tenantId: string, @Param("id") id: string) {
+        return this.campaignService.findOne(tenantId, id);
     }
 
-    @Post(":id/launch")
+    @Post()
+    @HttpCode(HttpStatus.CREATED)
+    async create(@CurrentTenant() tenantId: string, @Body() body: {
+        name: string;
+        templateId: string;
+        groupId: string;
+        imageUrl?: string;
+        workflowId?: string;
+    }) {
+        return this.campaignService.create(tenantId, body);
+    }
+
+    @Post(":id/send")
     @HttpCode(HttpStatus.ACCEPTED)
-    async launch(
-        @Param("id") id: string,
-        @Body("tenantId") tenantId?: string,
-    ) {
-        if (!tenantId) {
-            throw new BadRequestException("tenantId is required");
-        }
-        await this.campaignService.launch(tenantId, id);
-        return { accepted: true, campaignId: id };
+    async send(@CurrentTenant() tenantId: string, @Param("id") id: string) {
+        return this.campaignService.send(tenantId, id);
+    }
+
+    @Get(":id/messages")
+    async getMessages(@CurrentTenant() tenantId: string, @Param("id") id: string) {
+        return this.campaignService.getMessages(tenantId, id);
+    }
+
+    @Delete(":id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async delete(@CurrentTenant() tenantId: string, @Param("id") id: string) {
+        await this.campaignService.delete(tenantId, id);
     }
 }

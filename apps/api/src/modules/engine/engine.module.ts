@@ -6,12 +6,13 @@ import { ContactTag } from "../../entities/contact-tag.entity";
 import { Media } from "../../entities/media.entity";
 import { MediationSession } from "../../entities/mediation-session.entity";
 import { Contact } from "../../entities/contact.entity";
+import { WATemplate } from "../../entities/wa-template.entity";
 import { EngineService } from "./engine.service";
 import { QueueModule } from "../queue/queue.module";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Tenant, ContactTag, Media, MediationSession, Contact]),
+        TypeOrmModule.forFeature([Tenant, ContactTag, Media, MediationSession, Contact, WATemplate]),
         QueueModule,
     ],
     providers: [

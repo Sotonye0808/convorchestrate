@@ -17,6 +17,7 @@ import { ContactTag } from "../../entities/contact-tag.entity";
 import { Media } from "../../entities/media.entity";
 import { MediationSession } from "../../entities/mediation-session.entity";
 import { Contact } from "../../entities/contact.entity";
+import { WATemplate } from "../../entities/wa-template.entity";
 import { QueueService, DelayedMessageJob, WebhookTriggerJob } from "../queue/queue.service";
 
 @Injectable()
@@ -24,6 +25,7 @@ export class EngineService {
     private readonly logger = new Logger(EngineService.name);
     private readonly engine: WorkflowEngine;
     private sendMessageFn: ((phone: string, text: string) => Promise<string>) | null = null;
+    private sendTemplateFn: ((phone: string, templateName: string, language: string, components?: Array<{ type: string; parameters: Array<{ type: string; text: string }> }>) => Promise<string>) | null = null;
 
     constructor(
         private readonly memoryProvider: InMemoryProvider,
@@ -38,6 +40,8 @@ export class EngineService {
         private readonly mediationSessionRepo: Repository<MediationSession>,
         @InjectRepository(Contact)
         private readonly contactRepo: Repository<Contact>,
+        @InjectRepository(WATemplate)
+        private readonly templateRepo: Repository<WATemplate>,
     ) {
         const executor = this.buildExecutor();
         const engineLogger = {
@@ -50,6 +54,10 @@ export class EngineService {
 
     setSendFunction(fn: (phone: string, text: string) => Promise<string>): void {
         this.sendMessageFn = fn;
+    }
+
+    setSendTemplateFunction(fn: (phone: string, templateName: string, language: string, components?: Array<{ type: string; parameters: Array<{ type: string; text: string }> }>) => Promise<string>): void {
+        this.sendTemplateFn = fn;
     }
 
     async process(config: Parameters<WorkflowEngine["process"]>[0], ctx: EngineContext): Promise<void> {
@@ -105,6 +113,47 @@ export class EngineService {
                 } else {
                     self.logger.warn("send_message_no_send_function", { traceId: ctx.traceId });
                 }
+                return;
+            }
+
+            case "send_template_message": {
+                if (!action.template) {
+                    self.logger.warn("send_template_message_missing_template", { traceId: ctx.traceId });
+                    return;
+                }
+                if (!self.sendTemplateFn) {
+                    self.logger.warn("send_template_message_no_send_function", { traceId: ctx.traceId });
+                    return;
+                }
+                const templateEntity = await self.templateRepo.findOne({
+                    where: { tenantId: ctx.tenantId, name: action.template },
+                });
+                if (!templateEntity) {
+                    self.logger.warn("send_template_message_not_found", {
+                        traceId: ctx.traceId,
+                        template: action.template,
+                    });
+                    return;
+                }
+                const contact = await self.contactRepo.findOne({
+                    where: { id: ctx.contactId, tenantId: ctx.tenantId },
+                });
+                if (!contact) {
+                    self.logger.warn("send_template_message_contact_not_found", {
+                        traceId: ctx.traceId,
+                        contactId: ctx.contactId,
+                    });
+                    return;
+                }
+                const components = action.template_params && action.template_params.length > 0
+                    ? [{ type: "body" as const, parameters: action.template_params.map((p) => ({ type: "text" as const, text: p })) }]
+                    : undefined;
+                await self.sendTemplateFn(
+                    contact.phone,
+                    templateEntity.name,
+                    templateEntity.language,
+                    components,
+                );
                 return;
             }
 

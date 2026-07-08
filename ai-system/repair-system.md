@@ -1,8 +1,8 @@
 # Repair System — Error Knowledge Base
 
 > **Metadata**
-> - last-updated-by: migration-v1-to-v2
-> - last-verified-against-code: 2026-07-01
+> - last-updated-by: update-ai-system (R3 sync)
+> - last-verified-against-code: 2026-07-08
 > - staleness-policy: individual entries may be stale if the code has changed around them — verify fix still applies before reusing
 
 > **Overview:** Living knowledge base of errors encountered during development, their root causes, and how they were fixed. Agents must search this before diagnosing new errors and log every fixed bug to prevent recurrence.
@@ -59,7 +59,7 @@ Keep one canonical route prefix convention for the API and use it consistently i
 **Date:** 2026-06-24
 **Status:** Active
 
-### WhatsApp Browser Lock Blocks API Startup
+### [SUPERSEDED] WhatsApp Browser Lock Blocks API Startup
 
 **Symptom:**
 API startup fails with `The browser is already running for ...\\wa-sessions\\session. Use a different userDataDir or stop the running browser first.`
@@ -67,16 +67,67 @@ API startup fails with `The browser is already running for ...\\wa-sessions\\ses
 **Root Cause:**
 `MessagingService.onModuleInit()` awaited `WwjsAdapter.initialize()`. A stale `whatsapp-web.js` LocalAuth profile lock turned a WhatsApp runtime problem into a fatal API bootstrap failure.
 
-**Fix Applied:**
+**Fix Applied (Original):**
 Catch adapter initialization errors in `MessagingService` so the API can boot without WhatsApp. Log the failure and continue serving demo/admin routes.
 
-**Prevention:**
-Treat WhatsApp as an optional runtime dependency for API startup. Startup failures in the adapter should be degraded to warnings unless the app explicitly requires live WhatsApp connectivity.
+**Status:** SUPERSEDED — whatsapp-web.js adapter has been removed entirely (R1 rebase). Meta Cloud API does not use browser sessions. This error will not occur.
 
-**Files Affected:**
+**Files Affected (Original):**
 - apps/api/src/modules/messaging/messaging.service.ts
 
 **Date:** 2026-06-24
+**Status:** SUPERSEDED by wa-manager rebase (R1)
+
+### parseMetaError Swallows Structured Errors with try/catch
+
+**Symptom:**
+When the Meta API returns a structured error (with `error.code`, `error.type`, etc.), the `parseMetaError` function in `packages/meta-api` was converting it to a generic `MetaApiHttpError` instead of a rich `MetaApiError`.
+
+**Root Cause:**
+The parseMetaError function used a try/catch block that caught its own `throw new MetaApiError(...)` and re-threw it as `MetaApiHttpError`:
+
+```ts
+function parseMetaError(body: string, status: number): never {
+  try {
+    const parsed: MetaErrorResponse = JSON.parse(body)
+    if (parsed.error?.code) {
+      throw new MetaApiError(...)  // caught by catch block below
+    }
+  } catch {
+    if (status >= 300) {
+      throw new MetaApiHttpError(status, body)  // replaces MetaApiError
+    }
+  }
+  throw new MetaApiHttpError(status, body)
+}
+```
+
+**Fix Applied:**
+Restructured the function with the catch block re-throwing known types:
+
+```ts
+function parseMetaError(body: string, status: number): never {
+  if (status < 300) throw new MetaApiHttpError(status, body)
+  try {
+    const parsed: MetaErrorResponse = JSON.parse(body)
+    if (parsed.error?.code) {
+      throw new MetaApiError(...)
+    }
+  } catch (err) {
+    if (err instanceof MetaApiError) throw err
+    throw new MetaApiHttpError(status, body)
+  }
+  throw new MetaApiHttpError(status, body)
+}
+```
+
+**Prevention:**
+When using try/catch for flow control, ensure the catch block re-throws known error types rather than silently converting them.
+
+**Files Affected:**
+- packages/meta-api/src/meta-api.client.ts
+
+**Date:** 2026-07-01
 **Status:** Active
 
 ---

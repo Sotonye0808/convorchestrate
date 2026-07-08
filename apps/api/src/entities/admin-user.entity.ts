@@ -6,8 +6,8 @@ export class AdminUser {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ name: "tenant_id", type: "uuid", nullable: true })
-    tenantId?: string | null;
+    @Column({ name: "tenant_id", type: "uuid" })
+    tenantId!: string;
 
     @Column({ type: "varchar", length: 255 })
     email!: string;

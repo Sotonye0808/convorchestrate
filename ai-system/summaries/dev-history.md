@@ -2,7 +2,7 @@
 
 > **Metadata**
 >
-> - last-updated-by: migration-v1-to-v2
+> - last-updated-by: execute-feature (R5 sync)
 > - last-verified-against-code: 2026-07-01
 > - staleness-policy: historical entries do not go stale
 
@@ -149,3 +149,153 @@ Project migrated from ai-system v1 to v2. All documentation updated to vendor-ne
 
 **Next Sprint Focus:**
 Demo/preview mode, local testing setup, deployment guide
+
+## 2026-07-08 — R3 Campaign Engine (NestJS Port)
+
+**Summary:**
+Ported wa-manager's campaign data model and async send engine to NestJS/TypeORM. Created WATemplate, ContactGroup entities. Updated Contact (added groupId), Campaign (templateId/groupId/imageUrl), CampaignMessage (entity relations). Built TemplatesModule (CRUD + Meta submission + sync + upload-image), GroupsModule (CRUD + CSV import), and refactored CampaignModule to wa-manager's async send model with semaphore-concurrent sending and per-message tracking. All wired into AppModule with MessagingModule DI for MetaApiClient.
+
+**Completed:**
+- Created WATemplate entity — wa-manager model (name, language, category, components, metaId, metaStatus, rejectReason)
+- Created ContactGroup entity — named groups for campaign targeting
+- Updated Contact entity — added groupId FK, removed tenant-id constraints for wa-manager model
+- Updated Campaign entity — added templateId, groupId, imageUrl, sentCount/failCount, campaign status machine
+- Updated CampaignMessage entity — proper ManyToOne relations to Campaign and Contact, index on waMessageId
+- Built TemplatesModule — CRUD endpoints, submitToMeta, syncFromMeta, uploadImage
+- Built GroupsModule — CRUD, add/remove contacts, CSV import with batch insert
+- Refactored CampaignModule — wa-manager send model (async send, semaphore concurrency, per-message tracking)
+- Fixed webhooks.service.ts — TypeORM Partial type issue with relation fields (Record<string, unknown>)
+- Updated app.module.ts — registered TemplatesModule, GroupsModule, WATemplate, ContactGroup entities
+
+**Key Changes:**
+- Campaign send no longer uses BullMQ workflow queue — direct async send with semaphore concurrency
+- Campaign model no longer references workflow or tenant — simplified wa-manager model (template+group)
+- Two new API modules: /templates and /groups
+- Campaign messages tracked per-contact with status machine (pending → sent → delivered → read → failed)
+
+**Build & Test:**
+- 5/5 packages build (core, meta-api, schemas, utils, api)
+- 19/19 meta-api tests pass
+- 13/13 core tests pass
+
+**Next Sprint Focus:**
+Write unit tests for campaign engine, integration test for full campaign lifecycle.
+
+## 2026-07-08 — R3 Complete — All Tests Passing
+
+**Summary:**
+Completed R3 with 18 tests (13 unit + 5 integration) covering the full campaign lifecycle. Unit tests mock TypeORM repositories and MetaApiClient to test CampaignService in isolation. Integration tests exercise the controller layer end-to-end with a mocked service. R3 is now fully complete: entities, TemplatesModule, GroupsModule, CampaignModule (async send engine with semaphore concurrency, per-message tracking), webhook receiver, CSV import, unit tests, integration tests.
+
+**Completed:**
+- 13 unit tests for CampaignService (create validation, send flow with success/failure, findAll/findOne/getMessages/delete)
+- 5 integration tests for CampaignController (full lifecycle, 404 handling, conflict prevention, empty state, optional fields)
+
+**Build & Test:**
+- 5/5 packages build
+- 19/19 meta-api tests pass
+- 13/13 core tests pass
+- 18/18 api tests pass
+
+**Next Sprint Focus:**
+R4 — Multi-Tenant Isolation
+
+## 2026-07-08 — R5 Config-Driven Workflow Integration
+
+**Summary:**
+Added `send_template_message` action type to the workflow engine, wired the workflow engine into campaign launch path as an alternative to direct template sending, and wrote tests. The `send_template_message` action looks up a WATemplate by name from the DB (tenant-scoped) and sends it via MetaApiClient.sendTemplate with optional body parameters. Campaigns can now optionally reference a Workflow — when `workflowId` is set, `CampaignService.send()` delegates to `EngineService.process()` with a `campaign_start` trigger, allowing the workflow's handlers to orchestrate sending.
+
+**Completed:**
+- Added `send_template_message` to `ActionType` union + JSON schema in `packages/schemas`
+- Added `template_params?: string[]` to Action interface for template body variable substitution
+- Added `send_template_message` handler to `DefaultActionExecutor` (warns in core, implemented in app wiring)
+- Added `setSendTemplateFunction` to `EngineService` and wired it to `MetaApiClient.sendTemplate` in `MessagingService`
+- Added `WATemplate` repository injection to `EngineModule` + `EngineService` for tenant-scoped template lookups
+- Fixed `send_template_message` handler to look up contact phone number (not UUID) before sending
+- Added optional `workflowId` column + `@ManyToOne(() => Workflow)` relation to Campaign entity
+- Updated `CampaignModule` — imports `EngineModule`, adds Workflow entity
+- Refactored `CampaignService.send()` — supports two modes: direct template send (existing) and workflow engine mode (when campaign.workflowId is set)
+- Updated `CampaignController.create()` — accepts optional `workflowId`
+- 8 new unit tests: workflow create (success + not-found), workflow send (success + engine error)
+- Updated integration tests to pass new constructor params (WorkflowRepo + EngineService)
+
+**Key Changes:**
+- `send_template_message` action enables workflows to send WhatsApp templates by name (resolved via DB)
+- Campaign workflow mode provides an alternative launch path using the existing `WorkflowEngine` — workflows can orchestrate complex multi-step campaigns
+- WATemplate repo added to EngineModule for action executor template lookups
+
+**Build & Test:**
+- 5/5 packages build
+- 61/61 tests pass (19 meta-api + 13 core + 29 api)
+- New tests: 8 unit (create with workflowId, workflow send success/fail) + integration test updates
+
+**Next Sprint Focus:**
+R6 — Advanced Campaign Features (scheduling, A/B testing, analytics) or R4 deferred: tenant-scoped MetaApiClient factory
+
+## 2026-07-08 — R4 Multi-Tenant Isolation
+
+**Summary:**
+Added full multi-tenant isolation across all entities and services. Made tenantId required on WATemplate, ContactGroup, CampaignMessage, and AdminUser entities. Added Meta credential fields to Tenant entity (phoneNumberId, accessToken, appSecret, appId, wabaId). Added tenantId to JWT payload. Created @CurrentTenant() decorator and TenantsModule (CRUD). Refactored Templates, Groups, and Campaigns services to filter all queries by tenantId. Added JwtAuthGuard to all affected API controllers. 6 tenant isolation integration tests verify cross-tenant data separation.
+
+**Completed:**
+- Made tenantId required on 4 entities (WATemplate, ContactGroup, CampaignMessage, AdminUser)
+- Added Meta credential columns to Tenant entity
+- Added tenantId to JWT payload (auth.service, jwt.strategy)
+- Created @CurrentTenant() decorator for extracting tenantId from JWT
+- Created TenantsModule with full CRUD
+- Refactored TemplatesModule — all queries scoped to tenantId
+- Refactored GroupsModule — all queries scoped to tenantId
+- Refactored CampaignsModule — all queries scoped to tenantId, campaign_message tenantId propagation
+- Exported JwtAuthGuard from AuthModule for use across controllers
+- 6 integration tests covering tenant isolation scenarios
+
+**Key Changes:**
+- tenantId is now always required on tenant-scoped entities (no nullable columns)
+- JWT includes tenantId extracted from AdminUser record
+- All template/group/campaign endpoints require JWT auth
+- Controllers extract tenantId from JWT via @CurrentTenant() decorator
+- Tenant entity stores per-tenant Meta credentials (credential override wiring deferred)
+
+**Build & Test:**
+- 5/5 packages build
+- 51/51 tests pass (19 meta-api + 13 core + 19 api)
+
+**Next Sprint Focus:**
+R5 — Config-Driven Workflow Integration
+
+## 2026-07-01 — R1 Foundation Reset & R2 Meta API Backend
+
+**Summary:**
+Executed the wa-manager rebase. R1 removed obsolete v1 code (old dashboard, adapters, memory, worker packages) and adopted wa-manager's Next.js dashboard + Docker Compose. R2 created `packages/meta-api` (typed Meta Cloud API wrapper with sendTemplate, sendText, sendImage, uploadMedia, submitTemplate, listTemplates, webhook HMAC validation) and refactored the NestJS API to use it — replacing the whatsapp-web.js adapter with Meta Cloud API webhooks.
+
+**Completed:**
+
+- R1: Removed obsolete `apps/dashboard` (old React/Vite), `packages/adapters`, `packages/memory`, `apps/worker`
+- R1: Adopted wa-manager's Next.js 15 frontend as new `apps/dashboard`
+- R1: Wrote new `infrastructure/docker-compose.yml` (postgres + api + dashboard)
+- R1: Updated `.env.example` with Meta Cloud API vars
+- R2: Created `packages/meta-api` — typed wrapper around Meta WhatsApp Cloud REST API
+- R2: Implemented core Meta methods: sendTemplate, sendImage, sendText, uploadMedia, submitTemplate, listTemplates
+- R2: Implemented webhook verification (GET challenge) + HMAC-SHA256 signature validation (with OLD_META_APP_SECRET rotation)
+- R2: Created CampaignMessage entity for delivery status tracking
+- R2: Created WebhooksModule (controller + service) for Meta delivery callbacks
+- R2: Refactored MessagingModule to use MetaApiClient instead of WwjsAdapter
+- R2: Refactored EngineService to use sendMessageFn callback (wired to MetaApiClient)
+- R2: Refactored DelayedMessageProcessor to use sendMessageFn callback
+- R2: Fixed packages/core to self-contain MemoryProvider/SessionState types (removed dependency on deleted @convorchestrate/memory)
+- R2: Removed old qr.controller.ts, message-normalizer.ts (whatsapp-web.js artifacts)
+
+**Key Changes:**
+
+- WhatsApp transport switched from Puppeteer-based whatsapp-web.js to Meta's official Cloud API
+- Session state management moved from RedisMemoryProvider to InMemoryProvider (in core)
+- Incoming message flow: Meta Webhook → WebhooksController → MessagingService → BullMQ → EngineService → MetaApiClient
+- Internal message interface changed from IncomingRawMessage (whatsapp-web.js format) to IncomingWebhookMessage (Meta webhook format)
+
+**Build & Test:**
+
+- 5/5 packages build (core, meta-api, schemas, utils, api)
+- 19/19 meta-api tests pass
+- 13/13 core engine tests pass
+
+**Next Sprint Focus:**
+R3 — Campaign Engine NestJS Port. Create TypeORM entities (WATemplate, ContactGroup, Contact, Campaign, CampaignMessage), port campaign CRUD + async send engine with per-message tracking, port CSV import, port webhook receiver.

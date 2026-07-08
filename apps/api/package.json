@@ -7,6 +7,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "test": "npm run build && node --test \"dist/**/*.test.js\"",
     "migration:run": "typeorm-ts-node-commonjs -d src/db/data-source.ts migration:run",
     "migration:generate": "typeorm-ts-node-commonjs -d src/db/data-source.ts migration:generate src/db/migrations/init"
   },
