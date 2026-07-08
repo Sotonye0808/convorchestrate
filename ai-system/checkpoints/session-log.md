@@ -1,6 +1,7 @@
 # Development Checkpoints — Session Log
 
 > **Metadata**
+>
 > - last-updated-by: migration-v1-to-v2
 > - last-verified-against-code: 2026-07-01
 > - staleness-policy: append-only — never modify past entries
@@ -40,14 +41,15 @@
 Initial monorepo scaffold files created (apps, packages, infrastructure).
 
 **Files Modified:**
+
 - package.json — workspace setup
 - turbo.json — pipeline setup
-- apps/* — placeholder main files
-- packages/* — placeholder index files
-- infrastructure/* — docker-compose and Dockerfiles
+- apps/\* — placeholder main files
+- packages/\* — placeholder index files
+- infrastructure/\* — docker-compose and Dockerfiles
 
 **Next Task:**
-Bootstrap .ai-system documentation and reconcile scaffold to plan.
+Bootstrap ai-system documentation and reconcile scaffold to plan.
 
 **Notes / Blockers:**
 Scaffold is minimal and missing entities, migrations, and per-package tsconfig.
@@ -55,16 +57,17 @@ Scaffold is minimal and missing entities, migrations, and per-package tsconfig.
 ## Session 2 — 2026-05-06
 
 **Completed:**
-.ai-system documentation bootstrapped from build plan.
+ai-system documentation bootstrapped from build plan.
 
 **Files Modified:**
-- .ai-system/ai-context.md
-- .ai-system/agents/*.md
-- .ai-system/planning/*.md
-- .ai-system/index/*.md
-- .ai-system/checkpoints/session-log.md
-- .ai-system/memory/*.md
-- .ai-system/summaries/dev-history.md
+
+- ai-system/ai-context.md
+- ai-system/agents/\*.md
+- ai-system/planning/\*.md
+- ai-system/index/\*.md
+- ai-system/checkpoints/session-log.md
+- ai-system/memory/\*.md
+- ai-system/summaries/dev-history.md
 
 **Next Task:**
 Finish Phase 0: align scaffold, add entities, migrations, and run build.
@@ -78,12 +81,13 @@ None.
 Phase 0 scaffold reconciliation and build success.
 
 **Files Modified:**
+
 - package.json — workspace deps and scripts
-- apps/api/src/* — app module, entities, data source, migration
-- apps/worker/src/* — worker module and entrypoint
-- apps/dashboard/* — Vite and Tailwind config
+- apps/api/src/\* — app module, entities, data source, migration
+- apps/worker/src/\* — worker module and entrypoint
+- apps/dashboard/\* — Vite and Tailwind config
 - infrastructure/docker-compose.yml — full service stack
-- infrastructure/docker/* — Dockerfiles
+- infrastructure/docker/\* — Dockerfiles
 - .env.example — environment template
 
 **Next Task:**
@@ -98,6 +102,7 @@ Removed BullMQ deps from worker for Phase 0; add in Phase 5.
 Phase 1 — Engine Core + Phase 2 — WhatsApp Adapter + Phase 3 — Media & Tagging.
 
 **Files Modified:**
+
 - packages/schemas/src/workflow.schema.ts — Added persistState, all action types
 - packages/core/src/engine.ts — Reactive + sequential + mediation processing
 - packages/core/src/action-executor.ts — DefaultActionExecutor
@@ -117,6 +122,7 @@ Start Phase 4: Sequential + Mediation workflows.
 Phases 4-8 all executed sequentially.
 
 **Files Modified:**
+
 - packages/core/src/engine.ts — processSequential(), processMediation()
 - packages/core/src/action-executor.ts — transition_step, delay, trigger_webhook, relay_to_party
 - apps/api/src/modules/queue/ — QueueModule, QueueService, processors
@@ -134,6 +140,7 @@ Add demo/preview mode with simulated message endpoint. Write local testing guide
 Setup reconciliation, DB migrations, build fixes, and full app startup verification.
 
 **Files Modified:**
+
 - apps/api/src/db/data-source.ts — Added Campaign entity, .env loading for CLI
 - apps/api/src/app.module.ts — Added QueueModule, ConfigModule envFilePath fix
 - apps/api/src/modules/queue/delayed-message.processor.ts — Fixed import type
@@ -149,6 +156,7 @@ Deploy + demo mode or write integration tests.
 Fixed TypeORM migration CLI env loading.
 
 **Files Modified:**
+
 - apps/api/src/db/data-source.ts — Load .env explicitly for TypeORM CLI
 
 **Next Task:**
@@ -160,6 +168,7 @@ Continue with demo mode, local testing, or deployment documentation.
 Fixed missing global /api route prefix.
 
 **Files Modified:**
+
 - apps/api/src/main.ts — Added `app.setGlobalPrefix("api")`
 
 **Next Task:**
@@ -171,6 +180,7 @@ Re-test POST /api/demo/seed and dashboard demo controls.
 Made WhatsApp adapter startup non-fatal.
 
 **Files Modified:**
+
 - apps/api/src/modules/messaging/messaging.service.ts — Catch initialize() failures
 
 **Next Task:**
@@ -182,9 +192,10 @@ Re-run the API and, if needed, clean up locked wa-sessions profile.
 Ran `update-ai-system.md` — full post-migration drift audit.
 
 **Files Modified:**
-- .ai-system/index/dependency-graph.md — corrected module dep map, expanded external deps (9 -> 31 entries)
-- .ai-system/summaries/dev-history.md — added drift sync entry
-- .ai-system/checkpoints/session-log.md — this entry
+
+- ai-system/index/dependency-graph.md — corrected module dep map, expanded external deps (9 -> 31 entries)
+- ai-system/summaries/dev-history.md — added drift sync entry
+- ai-system/checkpoints/session-log.md — this entry
 
 **Next Task:**
 Demo/preview mode, local testing setup, deployment guide.
@@ -198,10 +209,11 @@ Significant drift found in dependency graph: worker claimed deps on core/memory/
 ## Session 10 — 2026-07-01
 
 **Completed:**
-Migrated .ai-system from v1 to v2. All documentation updated.
+Migrated ai-system from v1 to v2. All documentation updated.
 
 **Files Modified:**
-- .ai-system/ (entire directory restructured to v2 layout)
+
+- ai-system/ (entire directory restructured to v2 layout)
 
 **Next Task:**
 Demo/preview mode, local testing setup, deployment guide.

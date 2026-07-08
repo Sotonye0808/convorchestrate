@@ -1,6 +1,7 @@
 # Project AI Context — Convorchestrate
 
 > **Metadata**
+>
 > - last-updated-by: R2-meta-api-refactor
 > - last-verified-against-code: 2026-07-01
 > - staleness-policy: re-verify before trusting if project structure has changed
@@ -11,17 +12,17 @@
 
 ## Quick Reference
 
-| Field | Value |
-|-------|-------|
-| Project Name | Convorchestrate |
-| Type | Web App / SaaS |
-| Primary Language | TypeScript |
-| Frontend | Next.js 15 + React 19 (dashboard adopted from wa-manager) |
-| Backend | NestJS 10 + Fastify |
-| Database | PostgreSQL 16 + TypeORM |
-| Queue/Cache | Redis 7 + BullMQ |
-| WhatsApp | Meta WhatsApp Cloud API (packages/meta-api) |
-| Monorepo | Turborepo |
+| Field            | Value                                                     |
+| ---------------- | --------------------------------------------------------- |
+| Project Name     | Convorchestrate                                           |
+| Type             | Web App / SaaS                                            |
+| Primary Language | TypeScript                                                |
+| Frontend         | Next.js 15 + React 19 (dashboard adopted from wa-manager) |
+| Backend          | NestJS 10 + Fastify                                       |
+| Database         | PostgreSQL 16 + TypeORM                                   |
+| Queue/Cache      | Redis 7 + BullMQ                                          |
+| WhatsApp         | Meta WhatsApp Cloud API (packages/meta-api)               |
+| Monorepo         | Turborepo                                                 |
 
 ---
 
@@ -33,14 +34,14 @@ Convorchestrate is a config-driven, multi-tenant WhatsApp conversation orchestra
 
 ## Key Modules
 
-| Module | Location | Purpose |
-|--------|----------|---------|
-| API | apps/api | NestJS HTTP API, Meta Cloud API integration |
-| Dashboard | apps/dashboard | Next.js 15 admin UI (wa-manager frontend) |
-| Core | packages/core | Workflow engine, action execution, InMemoryProvider |
-| Meta API | packages/meta-api | Typed Meta WhatsApp Cloud REST API wrapper |
-| Schemas | packages/schemas | Workflow JSON schema + validators |
-| Utils | packages/utils | Shared types and helpers |
+| Module    | Location          | Purpose                                             |
+| --------- | ----------------- | --------------------------------------------------- |
+| API       | apps/api          | NestJS HTTP API, Meta Cloud API integration         |
+| Dashboard | apps/dashboard    | Next.js 15 admin UI (wa-manager frontend)           |
+| Core      | packages/core     | Workflow engine, action execution, InMemoryProvider |
+| Meta API  | packages/meta-api | Typed Meta WhatsApp Cloud REST API wrapper          |
+| Schemas   | packages/schemas  | Workflow JSON schema + validators                   |
+| Utils     | packages/utils    | Shared types and helpers                            |
 
 **Removed (v1 → v2):** `apps/worker`, `packages/adapters` (whatsapp-web.js), `packages/memory` — replaced by Meta Cloud API + InMemoryProvider
 
@@ -58,7 +59,7 @@ Convorchestrate is a config-driven, multi-tenant WhatsApp conversation orchestra
 
 ## Entry Point
 
-The AI system documentation lives in `.ai-system/`. Start with: `.ai-system/protocols/entry-protocol.md`
+The AI system documentation lives in `ai-system/`. Start with: `ai-system/protocols/entry-protocol.md`
 
 ---
 

@@ -1,28 +1,29 @@
 # Audit Drift Command
 
 > **Metadata**
+>
 > - last-updated-by: bootstrap-project
 > - last-verified-against-code: (set on first run)
 > - staleness-policy: re-verify if audit criteria change
 
-> **Overview:** Periodic deep consistency check. Compares `.ai-system/` claims against actual repo state — architecture doc vs. real code structure, task-queue claims vs. git history, repair-system entries vs. whether the bug actually recurred. Produces a discrepancy report. Does not fix drift — only detects and reports it.
+> **Overview:** Periodic deep consistency check. Compares `ai-system/` claims against actual repo state — architecture doc vs. real code structure, task-queue claims vs. git history, repair-system entries vs. whether the bug actually recurred. Produces a discrepancy report. Does not fix drift — only detects and reports it.
 
 ---
 
 ## Contract
 
-| Guarantees | Does NOT |
-|------------|----------|
-| Detects all categories of drift between docs and code | Does not fix the drift — only reports it |
-| Produces a structured discrepancy report | Does not make assumptions about specific AI tools |
-| Recommends which command to run for each discrepancy | Does not modify any files |
-| Tracks freshness metadata staleness across all files | Does not skip discrepancies that are hard to detect |
+| Guarantees                                            | Does NOT                                            |
+| ----------------------------------------------------- | --------------------------------------------------- |
+| Detects all categories of drift between docs and code | Does not fix the drift — only reports it            |
+| Produces a structured discrepancy report              | Does not make assumptions about specific AI tools   |
+| Recommends which command to run for each discrepancy  | Does not modify any files                           |
+| Tracks freshness metadata staleness across all files  | Does not skip discrepancies that are hard to detect |
 
 ---
 
 ## Required Inputs
 
-None — operates on the full `.ai-system/` directory and the repo.
+None — operates on the full `ai-system/` directory and the repo.
 
 ## Optional Directives
 
@@ -48,9 +49,10 @@ Directive: Verify repair-system entries against current code
 
 5. **Repair-system validity.** For each entry in `repair-system.md`, check: does the fix still exist in the code? Has the code changed around it in a way that could re-introduce the bug?
 
-6. **Freshness metadata audit.** For every `.ai-system/` file, check `last-verified-against-code`. If it is older than the staleness policy allows, flag it.
+6. **Freshness metadata audit.** For every `ai-system/` file, check `last-verified-against-code`. If it is older than the staleness policy allows, flag it.
 
 7. **Produce report:**
+
    ```
    ## Drift Audit Report — [date]
 
@@ -64,6 +66,6 @@ Directive: Verify repair-system entries against current code
 
    ### Clean Docs
     [list of docs that passed audit]
-    ```
+   ```
 
 8. **Clear in-progress.md** after the report is produced.

@@ -1,6 +1,7 @@
 # Repository Map
 
 > **Metadata**
+>
 > - last-updated-by: execute-feature (R1 foundation)
 > - last-verified-against-code: 2026-07-01
 > - staleness-policy: auto-regenerable — can be derived from `Get-ChildItem -Recurse` or `tree` command. Manual content only where intent cannot be derived from structure.
@@ -23,7 +24,7 @@ convorchestrate/
 |-- infrastructure/   -> Docker compose (postgres + api + dashboard)
 |-- configs/          -> Workflow and tenant config samples
 |-- scripts/          -> Seed scripts and tooling
-|-- .ai-system/       -> AI development system
+|-- ai-system/       -> AI development system
 `-- package.json
 ```
 
@@ -31,16 +32,16 @@ convorchestrate/
 
 ## Directory Descriptions
 
-| Directory | Purpose | Key Files |
-|-----------|---------|-----------|
-| apps/api | NestJS API with Meta Cloud API integration | apps/api/src/main.ts |
-| apps/dashboard | Next.js 15 admin dashboard (campaigns, templates, groups, history) | apps/dashboard/app/page.tsx |
-| packages/core | Workflow engine (to be refactored in R5) | packages/core/src |
-| packages/schemas | Workflow JSON schema + validators | packages/schemas/src |
-| packages/utils | Shared helpers | packages/utils/src |
-| infrastructure | Docker compose (postgres + api + dashboard) | infrastructure/docker-compose.yml |
-| configs | Sample workflow configs | configs/workflows |
-| scripts | Seed and tooling | scripts/seed.ts |
+| Directory        | Purpose                                                            | Key Files                         |
+| ---------------- | ------------------------------------------------------------------ | --------------------------------- |
+| apps/api         | NestJS API with Meta Cloud API integration                         | apps/api/src/main.ts              |
+| apps/dashboard   | Next.js 15 admin dashboard (campaigns, templates, groups, history) | apps/dashboard/app/page.tsx       |
+| packages/core    | Workflow engine (to be refactored in R5)                           | packages/core/src                 |
+| packages/schemas | Workflow JSON schema + validators                                  | packages/schemas/src              |
+| packages/utils   | Shared helpers                                                     | packages/utils/src                |
+| infrastructure   | Docker compose (postgres + api + dashboard)                        | infrastructure/docker-compose.yml |
+| configs          | Sample workflow configs                                            | configs/workflows                 |
+| scripts          | Seed and tooling                                                   | scripts/seed.ts                   |
 
 ## API Module Structure
 
@@ -62,8 +63,8 @@ apps/api/src/modules/
 
 ## Entry Points
 
-| Purpose | File |
-|---------|------|
-| API server | apps/api/src/main.ts |
-| Dashboard | apps/dashboard/app/page.tsx |
-| Root config | package.json |
+| Purpose     | File                        |
+| ----------- | --------------------------- |
+| API server  | apps/api/src/main.ts        |
+| Dashboard   | apps/dashboard/app/page.tsx |
+| Root config | package.json                |

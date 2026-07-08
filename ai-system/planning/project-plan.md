@@ -1,6 +1,7 @@
 # Project Plan
 
 > **Metadata**
+>
 > - last-updated-by: plan-feature (wa-manager integration)
 > - last-verified-against-code: 2026-07-01
 > - staleness-policy: re-verify if project scope or phase changes
@@ -13,7 +14,7 @@
 
 The original convorchestrate build used `whatsapp-web.js` (Puppeteer-based, fragile) and built campaign features from scratch. The open-source [wa-manager](https://github.com/godopetza/wa-manager) provides a **production-tested campaign engine** using **Meta WhatsApp Cloud API** with a modern **Next.js 15 / React 19 dashboard**. This plan rebases the project on wa-manager's functionality while incorporating convorchestrate's architectural concepts (multi-tenancy, config-driven workflows, mediation, engineering principles).
 
-**What we keep from convorchestrate:** Monorepo structure, config-driven workflow concept, multi-tenant doctrine, engineering principles, .ai-system, packages/core|schemas|utils (as reference).
+**What we keep from convorchestrate:** Monorepo structure, config-driven workflow concept, multi-tenant doctrine, engineering principles, ai-system, packages/core|schemas|utils (as reference).
 
 **What we adopt from wa-manager:** Meta Cloud API integration, campaign engine (async send, per-message tracking, delivery webhooks), template management, contact groups with CSV import, Next.js dashboard.
 
@@ -124,7 +125,7 @@ The original convorchestrate build used `whatsapp-web.js` (Puppeteer-based, frag
 
 ## Phase R9 — Documentation & Deployment
 
-- [ ] Update .ai-system to reflect new architecture
+- [ ] Update ai-system to reflect new architecture
 - [ ] Write local testing guide (SETUP.md)
 - [ ] Write deployment guide
 - [ ] Update README with project description + attribution to [wa-manager](https://github.com/godopetza/wa-manager)
