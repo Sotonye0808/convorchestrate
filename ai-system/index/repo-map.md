@@ -2,8 +2,8 @@
 
 > **Metadata**
 >
-> - last-updated-by: update-ai-system (R3 sync)
-> - last-verified-against-code: 2026-07-08
+> - last-updated-by: dev-cycle (R9 sync)
+> - last-verified-against-code: 2026-07-14
 > - staleness-policy: auto-regenerable — can be derived from `Get-ChildItem -Recurse` or `tree` command. Manual content only where intent cannot be derived from structure.
 
 > **Overview:** Visual map of the project folder structure with purpose descriptions. Updated when the folder structure changes. This file is **auto-regenerable** — use tool-based discovery (filesystem MCP, git ls-tree) for ground truth, and treat manual entries here as supplementary context, not primary navigation.
@@ -59,13 +59,16 @@ apps/api/src/modules/
 ├── engine/          Workflow engine bridge (MetaApiClient send function wiring)
 ├── events/          Event log module
 ├── groups/          Contact group CRUD + CSV import (wa-manager model)
-├── health/          Health check
+├── health/          Health check (DB connectivity)
+├── mediations/      Mediation session CRUD (list, get, close) (with DB connectivity)
+├── mediations/      Mediation session CRUD (list, get, close)
 ├── media/           Media upload and storage
 ├── messaging/       Messaging service (incoming webhook → workflow queue)
-├── queue/           BullMQ queue service (workflow-execution, delayed-message, webhook-trigger)
+├── queue/           BullMQ queue service (workflow-execution, delayed-message, webhook-trigger, campaign-launch)
 ├── sessions/        Session management
 ├── settings/        Tenant settings
 ├── templates/       WhatsApp template CRUD + Meta submission + sync (wa-manager model)
+├── tenants/         Multi-tenant CRUD + Meta credential management
 ├── webhooks/        Meta delivery callback receiver
 └── workflows/       Config-driven workflow execution
 ```

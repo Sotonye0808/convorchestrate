@@ -10,6 +10,7 @@ import { CampaignMessage } from "../../entities/campaign-message.entity";
 import { WATemplate } from "../../entities/wa-template.entity";
 import { ContactGroup } from "../../entities/contact-group.entity";
 import { Workflow } from "../../entities/workflow.entity";
+import { Tenant } from "../../entities/tenant.entity";
 
 function mockRepo<T extends Record<string, any>>() {
     const store = new Map<string, T>();
@@ -61,13 +62,16 @@ describe("CampaignService", () => {
     let templateRepo: Repository<WATemplate>;
     let groupRepo: Repository<ContactGroup>;
     let workflowRepo: Repository<Workflow>;
+    let tenantRepo: Repository<Tenant>;
     let metaApiClient: MetaApiClient;
     let engineService: EngineService;
+    let queueService: any;
     let service: CampaignService;
 
     const templateData = { id: "t1", name: "welcome", language: "en", category: "MARKETING", components: [], metaStatus: "approved", metaId: "mt1" } as any;
     const groupData = { id: "g1", name: "test-group", contacts: [{ id: "c1", phone: "15551234567", name: "Alice", groupId: "g1", metadata: {} }, { id: "c2", phone: "15559876543", name: "Bob", groupId: "g1", metadata: {} }] } as any;
     const workflowData = { id: "w1", name: "test-workflow", type: "reactive", config: { workflow_id: "w1", name: "test-workflow", type: "reactive", handlers: [{ event: "campaign_start", actions: [{ type: "send_template_message", template: "welcome" }] }] }, version: 1, isActive: true } as any;
+    const tenantData = { id: "t1", phoneNumberId: "123", accessToken: "tok" } as any;
 
     beforeEach(() => {
         campaignRepo = mockRepo<Campaign>();
@@ -75,6 +79,7 @@ describe("CampaignService", () => {
         templateRepo = mockRepo<WATemplate>();
         groupRepo = mockRepo<ContactGroup>();
         workflowRepo = mockRepo<Workflow>();
+        tenantRepo = mockRepo<Tenant>();
         metaApiClient = {
             sendTemplate: mock.fn(() => Promise.resolve("wamid.test.123")),
             sendText: mock.fn(),
@@ -84,6 +89,7 @@ describe("CampaignService", () => {
             listTemplates: mock.fn(),
         } as any;
         engineService = { process: mock.fn(() => Promise.resolve()) } as any;
+        queueService = { campaignQueue: { add: mock.fn(() => Promise.resolve({ id: "job1" })) } } as any;
 
         service = new CampaignService(
             campaignRepo as any,
@@ -91,8 +97,10 @@ describe("CampaignService", () => {
             templateRepo as any,
             groupRepo as any,
             workflowRepo as any,
+            tenantRepo as any,
             metaApiClient,
             engineService,
+            queueService,
         );
     });
 
@@ -232,6 +240,92 @@ describe("CampaignService", () => {
             const result = await service.send("t1", "c2");
 
             assert.equal(result.message, "campaign completed");
+        });
+
+        it("passes tenant credentials to MetaApiClient when tenant has phoneNumberId and accessToken", async () => {
+            const campaign = { id: "c1", name: "test", templateId: "t1", groupId: "g1", status: "draft", template: templateData, group: groupData } as any;
+            (campaignRepo.findOne as any).mock.mockImplementation(() => Promise.resolve(campaign));
+            (tenantRepo.findOne as any).mock.mockImplementation(() => Promise.resolve(tenantData));
+
+            await service.send("t1", "c1");
+
+            const lastCall = (metaApiClient.sendTemplate as any).mock.calls[0];
+            assert.equal(lastCall.arguments[4]?.phoneNumberId, "123");
+            assert.equal(lastCall.arguments[4]?.accessToken, "tok");
+        });
+    });
+
+    describe("scheduling", () => {
+        it("schedules campaign via queue when scheduledAt is in the future", async () => {
+            const future = new Date(Date.now() + 86_400_000);
+            const campaign = { id: "c1", name: "test", templateId: "t1", groupId: "g1", status: "draft", scheduledAt: future, template: templateData, group: groupData } as any;
+            (campaignRepo.findOne as any).mock.mockImplementation(() => Promise.resolve(campaign));
+
+            const result = await service.send("t1", "c1");
+
+            assert.equal(result.message, "campaign scheduled");
+            assert.equal((queueService.campaignQueue.add as any).mock.calls.length, 1);
+            const addArg = (queueService.campaignQueue.add as any).mock.calls[0].arguments;
+            assert.equal(addArg[0], "campaign-launch");
+            assert.equal(addArg[1].campaignId, "c1");
+            assert.ok(addArg[2].delay > 0);
+        });
+
+        it("throws ConflictException if campaign status is already scheduled", async () => {
+            const campaign = { id: "c1", name: "test", templateId: "t1", groupId: "g1", status: "scheduled", template: templateData, group: groupData } as any;
+            (campaignRepo.findOne as any).mock.mockImplementation(() => Promise.resolve(campaign));
+
+            await assert.rejects(() => service.send("t1", "c1"), /already scheduled/);
+        });
+    });
+
+    describe("getStats", () => {
+        it("returns aggregated stats for a campaign", async () => {
+            (campaignRepo.findOne as any).mock.mockImplementation(() => Promise.resolve({ id: "c1" } as Campaign));
+            (campaignMessageRepo.find as any).mock.mockImplementation(() => Promise.resolve([
+                { status: "sent" },
+                { status: "delivered" },
+                { status: "read" },
+                { status: "pending" },
+                { status: "failed" },
+            ] as CampaignMessage[]));
+
+            const stats = await service.getStats("t1", "c1");
+
+            assert.equal(stats.total, 5);
+            assert.equal(stats.sent, 1);
+            assert.equal(stats.delivered, 1);
+            assert.equal(stats.read, 1);
+            assert.equal(stats.pending, 1);
+            assert.equal(stats.failed, 1);
+        });
+    });
+
+    describe("create with scheduledAt", () => {
+        it("creates a campaign with scheduledAt date", async () => {
+            (templateRepo.findOne as any).mock.mockImplementation(() => Promise.resolve(templateData));
+            (groupRepo.findOne as any).mock.mockImplementation(() => Promise.resolve(groupData));
+
+            const result = await service.create("t1", { name: "scheduled", templateId: "t1", groupId: "g1", scheduledAt: "2026-07-20T10:00:00Z" });
+
+            assert.equal(result.scheduledAt?.toISOString(), "2026-07-20T10:00:00.000Z");
+            assert.equal(result.status, "draft");
+        });
+    });
+
+    describe("send with rate limit", () => {
+        it("respects campaign_max_sends_per_minute from tenant config", async () => {
+            const campaign = { id: "c1", name: "test", templateId: "t1", groupId: "g1", status: "draft", template: templateData, group: groupData } as any;
+            (campaignRepo.findOne as any).mock.mockImplementation(() => Promise.resolve(campaign));
+            (tenantRepo.findOne as any).mock.mockImplementation(() => Promise.resolve({
+                id: "t1",
+                config: { campaign_max_sends_per_minute: 2 },
+            }));
+
+            const result = await service.send("t1", "c1");
+
+            assert.equal(result.contacts, 2);
+            assert.equal((metaApiClient.sendTemplate as any).mock.calls.length, 2);
         });
     });
 

@@ -7,6 +7,7 @@ import { CampaignMessage } from "../../entities/campaign-message.entity";
 import { WATemplate } from "../../entities/wa-template.entity";
 import { ContactGroup } from "../../entities/contact-group.entity";
 import { Workflow } from "../../entities/workflow.entity";
+import { Tenant } from "../../entities/tenant.entity";
 import type { Repository } from "typeorm";
 import type { MetaApiClient } from "@convorchestrate/meta-api";
 import type { EngineService } from "../engine/engine.service";
@@ -62,6 +63,7 @@ describe("R4 — tenant isolation", () => {
     let templateRepo: Repository<WATemplate>;
     let groupRepo: Repository<ContactGroup>;
     let workflowRepo: Repository<Workflow>;
+    let tenantRepo: Repository<Tenant>;
     let metaApis: Record<string, MetaApiClient>;
     let engineService: EngineService;
     let service: CampaignService;
@@ -75,12 +77,14 @@ describe("R4 — tenant isolation", () => {
         templateRepo = mockRepo<WATemplate>();
         groupRepo = mockRepo<ContactGroup>();
         workflowRepo = mockRepo<Workflow>();
+        tenantRepo = mockRepo<Tenant>();
 
         metaApis = {
             "tenant-a": { sendTemplate: mock.fn(() => Promise.resolve("wamid.a")) } as any,
             "tenant-b": { sendTemplate: mock.fn(() => Promise.resolve("wamid.b")) } as any,
         };
         engineService = { process: mock.fn(() => Promise.resolve()) } as any;
+        const queueService = { campaignQueue: { add: mock.fn(() => Promise.resolve({ id: "job1" })) } } as any;
 
         service = new CampaignService(
             campaignRepo as any,
@@ -88,8 +92,10 @@ describe("R4 — tenant isolation", () => {
             templateRepo as any,
             groupRepo as any,
             workflowRepo as any,
+            tenantRepo as any,
             metaApis["tenant-a"], // default
             engineService,
+            queueService,
         );
     });
 

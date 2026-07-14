@@ -28,6 +28,7 @@ export class CampaignController {
         groupId: string;
         imageUrl?: string;
         workflowId?: string;
+        scheduledAt?: string;
     }) {
         return this.campaignService.create(tenantId, body);
     }
@@ -41,6 +42,11 @@ export class CampaignController {
     @Get(":id/messages")
     async getMessages(@CurrentTenant() tenantId: string, @Param("id") id: string) {
         return this.campaignService.getMessages(tenantId, id);
+    }
+
+    @Get(":id/stats")
+    async getStats(@CurrentTenant() tenantId: string, @Param("id") id: string) {
+        return this.campaignService.getStats(tenantId, id);
     }
 
     @Delete(":id")

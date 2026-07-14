@@ -33,6 +33,7 @@ import { GroupsModule } from "./modules/groups/groups.module";
 import { TenantsModule } from "./modules/tenants/tenants.module";
 import { HealthModule } from "./modules/health/health.module";
 import { DemoModule } from "./modules/demo/demo.module";
+import { MediationsModule } from "./modules/mediations/mediations.module";
 
 @Module({
     imports: [
@@ -88,6 +89,7 @@ import { DemoModule } from "./modules/demo/demo.module";
         QueueModule,
         HealthModule,
         DemoModule,
+        MediationsModule,
     ],
 })
 export class AppModule { }

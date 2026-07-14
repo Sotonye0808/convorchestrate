@@ -25,7 +25,7 @@ export class EngineService {
     private readonly logger = new Logger(EngineService.name);
     private readonly engine: WorkflowEngine;
     private sendMessageFn: ((phone: string, text: string) => Promise<string>) | null = null;
-    private sendTemplateFn: ((phone: string, templateName: string, language: string, components?: Array<{ type: string; parameters: Array<{ type: string; text: string }> }>) => Promise<string>) | null = null;
+    private sendTemplateFn: ((phone: string, templateName: string, language: string, components?: Array<{ type: string; parameters: Array<{ type: string; text: string }> }>, tenantCreds?: { phoneNumberId?: string; accessToken?: string }) => Promise<string>) | null = null;
 
     constructor(
         private readonly memoryProvider: InMemoryProvider,
@@ -56,12 +56,38 @@ export class EngineService {
         this.sendMessageFn = fn;
     }
 
-    setSendTemplateFunction(fn: (phone: string, templateName: string, language: string, components?: Array<{ type: string; parameters: Array<{ type: string; text: string }> }>) => Promise<string>): void {
+    setSendTemplateFunction(fn: (phone: string, templateName: string, language: string, components?: Array<{ type: string; parameters: Array<{ type: string; text: string }> }>, tenantCreds?: { phoneNumberId?: string; accessToken?: string }) => Promise<string>): void {
         this.sendTemplateFn = fn;
     }
 
     async process(config: Parameters<WorkflowEngine["process"]>[0], ctx: EngineContext): Promise<void> {
         await this.engine.process(config, ctx);
+
+        if (config.type === "mediation" && config.timeout_ms && config.timeout_ms > 0 && ctx.trigger !== "mediation_timeout") {
+            const svc = this;
+            setTimeout(async () => {
+                try {
+                    const session = await svc.mediationSessionRepo.findOne({
+                        where: { tenantId: ctx.tenantId, sessionId: ctx.sessionId, status: "active" } as any,
+                    });
+                    if (session && config.on_timeout && config.on_timeout.length > 0) {
+                        await svc.engine.process(config, {
+                            ...ctx,
+                            trigger: "mediation_timeout",
+                        });
+                    }
+                    if (session) {
+                        session.status = "timed_out";
+                        await svc.mediationSessionRepo.save(session);
+                    }
+                } catch (error) {
+                    svc.logger.error("mediation_timeout_failed", {
+                        sessionId: ctx.sessionId,
+                        error: error instanceof Error ? error.message : String(error),
+                    });
+                }
+            }, config.timeout_ms);
+        }
     }
 
     private buildExecutor(): ActionExecutor {
@@ -145,6 +171,12 @@ export class EngineService {
                     });
                     return;
                 }
+                const tenant = await self.tenantRepo.findOne({
+                    where: { id: ctx.tenantId },
+                });
+                const tenantCreds = tenant?.phoneNumberId && tenant?.accessToken
+                    ? { phoneNumberId: tenant.phoneNumberId, accessToken: tenant.accessToken }
+                    : undefined;
                 const components = action.template_params && action.template_params.length > 0
                     ? [{ type: "body" as const, parameters: action.template_params.map((p) => ({ type: "text" as const, text: p })) }]
                     : undefined;
@@ -153,6 +185,7 @@ export class EngineService {
                     templateEntity.name,
                     templateEntity.language,
                     components,
+                    tenantCreds,
                 );
                 return;
             }

@@ -50,7 +50,7 @@ export class GroupsController {
     async importCsv(
         @CurrentTenant() tenantId: string,
         @Param("id") id: string,
-        @Body() body: { rows: Array<{ phone: string; name?: string }> },
+        @Body() body: { rows: Array<{ phone: string; name?: string; tags?: string[] }> },
     ) {
         const imported = await this.groupsService.importCsv(tenantId, id, body.rows);
         return { imported };

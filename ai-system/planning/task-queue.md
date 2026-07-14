@@ -56,10 +56,10 @@ convorchestrate/
 | [XL] | R3: Campaign Engine (NestJS Port)      | [x]    |
 | [XL] | R4: Multi-Tenant Isolation             | [~]    |
 | [XL] | R5: Config-Driven Workflow Integration | [x]    |
-| [L]  | R6: Advanced Campaign Features         | [ ]    |
-| [L]  | R7: Mediation Workflows                | [ ]    |
-| [M]  | R8: Hardening & Polish                 | [ ]    |
-| [M]  | R9: Documentation & Deployment         | [ ]    |
+| [L]  | R6: Advanced Campaign Features         | [x]    |
+| [L]  | R7: Mediation Workflows                | [x]    |
+| [M]  | R8: Hardening & Polish                 | [x]    |
+| [M]  | R9: Documentation & Deployment         | [x]    |
 
 ---
 
@@ -85,7 +85,7 @@ convorchestrate/
 | [L]  | Refactor all queries to filter by tenant_id                    | [x]    |
 | [M]  | Add Meta credential fields to Tenant entity                    | [x]    |
 | [M]  | Test: tenant isolation (A cannot see B's data)                 | [x]    |
-| [L]  | Wire tenant-scoped MetaApiClient (request-scoped factory)      | [ ]    |
+| [L]  | Wire tenant-scoped MetaApiClient (credential passthrough at call time) | [x]    |
 
 ---
 

@@ -8,12 +8,16 @@ import { CampaignMessage } from "../../entities/campaign-message.entity";
 import { WATemplate } from "../../entities/wa-template.entity";
 import { ContactGroup } from "../../entities/contact-group.entity";
 import { Workflow } from "../../entities/workflow.entity";
+import { Tenant } from "../../entities/tenant.entity";
 import { EngineService } from "../engine/engine.service";
+import { QueueService } from "../queue/queue.service";
 import { randomUUID } from "crypto";
 
 @Injectable()
 export class CampaignService {
     private readonly logger = new Logger(CampaignService.name);
+
+    private readonly rateLimitMap = new Map<string, { count: number; windowStart: number }>();
 
     constructor(
         @InjectRepository(Campaign)
@@ -26,8 +30,11 @@ export class CampaignService {
         private readonly groupRepo: Repository<ContactGroup>,
         @InjectRepository(Workflow)
         private readonly workflowRepo: Repository<Workflow>,
+        @InjectRepository(Tenant)
+        private readonly tenantRepo: Repository<Tenant>,
         private readonly metaApiClient: MetaApiClient,
         private readonly engineService: EngineService,
+        private readonly queueService: QueueService,
     ) { }
 
     async findAll(tenantId: string): Promise<Campaign[]> {
@@ -53,6 +60,7 @@ export class CampaignService {
         groupId: string;
         imageUrl?: string;
         workflowId?: string;
+        scheduledAt?: string;
     }): Promise<Campaign> {
         const template = await this.templateRepo.findOne({ where: { id: data.templateId, tenantId } });
         if (!template) throw new NotFoundException("template not found");
@@ -65,6 +73,8 @@ export class CampaignService {
             if (!workflow) throw new NotFoundException("workflow not found");
         }
 
+        const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : null;
+
         const campaign = this.campaignRepo.create({
             tenantId,
             name: data.name,
@@ -72,6 +82,7 @@ export class CampaignService {
             groupId: data.groupId,
             imageUrl: data.imageUrl ?? null,
             workflowId: data.workflowId ?? null,
+            scheduledAt,
             status: "draft",
         });
         return this.campaignRepo.save(campaign);
@@ -86,7 +97,30 @@ export class CampaignService {
         if (campaign.status === "sending") {
             throw new ConflictException("campaign is already sending");
         }
+        if (campaign.status === "scheduled") {
+            throw new ConflictException("campaign is already scheduled");
+        }
 
+        if (campaign.scheduledAt && campaign.scheduledAt > new Date()) {
+            const delay = campaign.scheduledAt.getTime() - Date.now();
+            await this.queueService.campaignQueue.add(
+                "campaign-launch",
+                { campaignId: id, tenantId },
+                { delay },
+            );
+            await this.campaignRepo.update(id, { status: "scheduled" });
+            this.logger.log("campaign_scheduled", { id, scheduledAt: campaign.scheduledAt });
+            return { message: "campaign scheduled", contacts: 0 };
+        }
+
+        return this.executeSend(tenantId, id, campaign);
+    }
+
+    private async executeSend(
+        tenantId: string,
+        id: string,
+        campaign: Campaign,
+    ): Promise<{ message: string; contacts: number }> {
         const contacts = campaign.group?.contacts ?? [];
         if (contacts.length === 0) {
             await this.campaignRepo.update(id, { status: "completed" });
@@ -114,9 +148,21 @@ export class CampaignService {
 
         const isWorkflowMode = !!campaign.workflowId && !!campaign.workflow;
 
+        const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+        const tenantCreds = tenant?.phoneNumberId && tenant?.accessToken
+            ? { phoneNumberId: tenant.phoneNumberId, accessToken: tenant.accessToken }
+            : undefined;
+
+        const maxSendsPerMinute = (tenant?.config as Record<string, any>)?.campaign_max_sends_per_minute;
+        const rateLimit = typeof maxSendsPerMinute === "number" && maxSendsPerMinute > 0 ? maxSendsPerMinute : 0;
+
         const sendPromises = contacts.map(async (ct, i) => {
             await sem.acquire();
             try {
+                if (rateLimit > 0) {
+                    await this.acquireRateLimit(tenantId, rateLimit);
+                }
+
                 const msgId = messages[i].id;
                 if (isWorkflowMode) {
                     const config = campaign.workflow!.config as unknown as Parameters<typeof this.engineService.process>[0];
@@ -139,6 +185,7 @@ export class CampaignService {
                         campaign.template!.name,
                         campaign.template!.language,
                         undefined,
+                        tenantCreds,
                     );
                     await this.campaignMessageRepo.update(msgId, {
                         status: "sent",
@@ -172,6 +219,65 @@ export class CampaignService {
 
         this.logger.log("campaign_completed", { id, sent, failed });
         return { message: "campaign completed", contacts: contacts.length };
+    }
+
+    private async acquireRateLimit(tenantId: string, maxPerMinute: number): Promise<void> {
+        const now = Date.now();
+        const windowMs = 60_000;
+        let entry = this.rateLimitMap.get(tenantId);
+
+        if (!entry || now - entry.windowStart >= windowMs) {
+            entry = { count: 0, windowStart: now };
+            this.rateLimitMap.set(tenantId, entry);
+        }
+
+        if (entry.count >= maxPerMinute) {
+            const waitMs = windowMs - (now - entry.windowStart);
+            if (waitMs > 0) {
+                await new Promise((resolve) => setTimeout(resolve, waitMs));
+            }
+            entry.count = 0;
+            entry.windowStart = Date.now();
+        }
+
+        entry.count++;
+    }
+
+    async getStats(tenantId: string, id: string): Promise<{
+        total: number;
+        pending: number;
+        sent: number;
+        delivered: number;
+        read: number;
+        failed: number;
+        sentRate: number;
+        deliveryRate: number;
+        readRate: number;
+    }> {
+        const campaign = await this.campaignRepo.findOne({ where: { id, tenantId } });
+        if (!campaign) throw new NotFoundException("campaign not found");
+
+        const messages = await this.campaignMessageRepo.find({ where: { campaignId: id, tenantId } });
+
+        const total = messages.length;
+        const pending = messages.filter((m) => m.status === "pending").length;
+        const sent = messages.filter((m) => m.status === "sent").length;
+        const delivered = messages.filter((m) => m.status === "delivered").length;
+        const read = messages.filter((m) => m.status === "read").length;
+        const failed = messages.filter((m) => m.status === "failed").length;
+
+        const nonPending = total - pending;
+        return {
+            total,
+            pending,
+            sent,
+            delivered,
+            read,
+            failed,
+            sentRate: nonPending > 0 ? Math.round((sent / nonPending) * 100) : 0,
+            deliveryRate: nonPending > 0 ? Math.round((delivered / nonPending) * 100) : 0,
+            readRate: nonPending > 0 ? Math.round((read / nonPending) * 100) : 0,
+        };
     }
 
     async getMessages(tenantId: string, id: string): Promise<CampaignMessage[]> {

@@ -1,9 +1,8 @@
 # System Architecture
 
 > **Metadata**
-> - last-updated-by: update-ai-system (R3 sync)
-> - last-updated-by: execute-feature (R5 sync)
-> - last-verified-against-code: 2026-07-08
+> - last-updated-by: execute-feature (R7+R8 sync)
+> - last-verified-against-code: 2026-07-14
 > - staleness-policy: re-verify before trusting if any architecture-affecting commits have been made since last-verified-against-code
 
 > **Overview:** How the system is structured — layers, modules, data flow, and configuration. Agents designing or changing structure must read this first.
@@ -40,6 +39,7 @@ Meta Cloud API Webhook
 | apps/api modules/groups | Contact group CRUD + CSV import | apps/api/src/modules/groups/ | TypeORM |
 | apps/api modules/campaigns | Campaign CRUD + async send engine (direct + workflow mode) | apps/api/src/modules/campaigns/ | WATemplate, ContactGroup, Workflow, MetaApiClient, EngineService |
 | apps/api modules/webhooks | Meta delivery callback receiver → campaign_messages | apps/api/src/modules/webhooks/ | CampaignMessage entity |
+| apps/api modules/mediations | Mediation session CRUD (list, get, close) | apps/api/src/modules/mediations/ | TypeORM MediationSession |
 | apps/dashboard | Admin UI for campaigns, templates, groups, history | apps/dashboard/app/page.tsx | API only |
 | packages/core | Workflow engine, action execution, InMemoryProvider | packages/core/src/engine.ts | packages/schemas |
 | packages/meta-api | Typed Meta WhatsApp Cloud REST API wrapper | packages/meta-api/src/index.ts | none (fetch-based) |
@@ -74,6 +74,20 @@ Dashboard API -> Campaign Service (async send with semaphore concurrency)
     └── Workflow mode (has workflowId) — EngineService.process (campaign_start trigger)
         -> WorkflowEngine -> handlers -> send_template_message -> MetaApiClient.sendTemplate
     -> Meta delivery webhook -> WebhooksService (status update on campaign_messages)
+```
+
+### Mediation Flow (R7)
+```
+Incoming message (keyword match)
+    -> MessagingService.handleIncoming()
+        -> resolveMediationParty() [create session or find existing, assign roles]
+        -> MediationContext attached to EngineContext
+    -> EngineService.process() [mediation type]
+        -> processMediation() [evaluate handlers with mediation context]
+            -> relay_to_party action [resolve other party, forward message]
+            -> tag_user, send_message, etc.
+        -> If timeout_ms configured: setTimeout -> on_timeout actions + mark session "timed_out"
+    -> Mediations CRUD API [list, get, close sessions]
 ```
 
 ---
@@ -113,6 +127,10 @@ All config points must follow the fallback discipline from `standards/engineerin
 
 ---
 
+## Global Infrastructure
+- AllExceptionsFilter registered in main.ts catches unhandled exceptions, logs via pino, returns structured JSON error response
+- Health endpoint checks DB connectivity (SELECT 1) in addition to uptime
+
 ## Known Constraints & Technical Debt
 
 - Core must not import adapters (now self-contained with InMemoryProvider)
@@ -122,7 +140,7 @@ All config points must follow the fallback discipline from `standards/engineerin
 - `import type` breaks NestJS DI — must use `import { Cls, type SomeType }` pattern
 - Fastify 4 plugin compat: pin `@fastify/*` plugins to Fastify 4-compatible majors
 - Meta webhook raw body must be captured via Fastify `preParsing` hook for HMAC signature validation
-- apps/api/Dockerfile still references removed packages — needs update
+- apps/api/Dockerfile fixed — removed stale worker reference, corrected port to 8080
 - `@radix-ui/react-badge` npm install fail — dashboard dependency not in registry, not blocking build
 
 ---

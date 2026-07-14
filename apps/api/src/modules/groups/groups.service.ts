@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ContactGroup } from "../../entities/contact-group.entity";
 import { Contact } from "../../entities/contact.entity";
+import { ContactTag } from "../../entities/contact-tag.entity";
 
 @Injectable()
 export class GroupsService {
@@ -13,6 +14,8 @@ export class GroupsService {
         private readonly groupRepo: Repository<ContactGroup>,
         @InjectRepository(Contact)
         private readonly contactRepo: Repository<Contact>,
+        @InjectRepository(ContactTag)
+        private readonly contactTagRepo: Repository<ContactTag>,
     ) { }
 
     async findAll(tenantId: string): Promise<ContactGroup[]> {
@@ -55,7 +58,11 @@ export class GroupsService {
         await this.contactRepo.delete({ id: contactId, tenantId });
     }
 
-    async importCsv(tenantId: string, groupId: string, rows: Array<{ phone: string; name?: string }>): Promise<number> {
+    async importCsv(
+        tenantId: string,
+        groupId: string,
+        rows: Array<{ phone: string; name?: string; tags?: string[] }>,
+    ): Promise<number> {
         const group = await this.groupRepo.findOne({ where: { id: groupId, tenantId } });
         if (!group) throw new NotFoundException("group not found");
 
@@ -70,7 +77,24 @@ export class GroupsService {
             }));
 
         if (contacts.length > 0) {
-            await this.contactRepo.save(contacts);
+            const saved = await this.contactRepo.save(contacts);
+
+            const tagEntries: ContactTag[] = [];
+            for (let i = 0; i < saved.length; i++) {
+                const tags = rows[i]?.tags;
+                if (tags && tags.length > 0) {
+                    for (const tag of tags) {
+                        tagEntries.push(this.contactTagRepo.create({
+                            tenantId,
+                            contactId: saved[i].id,
+                            tag: tag.toLowerCase().trim(),
+                        }));
+                    }
+                }
+            }
+            if (tagEntries.length > 0) {
+                await this.contactTagRepo.save(tagEntries);
+            }
         }
         return contacts.length;
     }

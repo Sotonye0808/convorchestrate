@@ -51,8 +51,8 @@ export class MessagingService {
     ) {
         const send = (phone: string, text: string) =>
             this.metaApiClient.sendText(phone, text);
-        const sendTemplate = (phone: string, templateName: string, language: string, components?: any) =>
-            this.metaApiClient.sendTemplate(phone, templateName, language, components);
+        const sendTemplate = (phone: string, templateName: string, language: string, components?: any, tenantCreds?: { phoneNumberId?: string; accessToken?: string }) =>
+            this.metaApiClient.sendTemplate(phone, templateName, language, components, tenantCreds);
         this.engineService.setSendFunction(send);
         this.engineService.setSendTemplateFunction(sendTemplate);
         this.delayedMessageProcessor.setSendFunction(send);

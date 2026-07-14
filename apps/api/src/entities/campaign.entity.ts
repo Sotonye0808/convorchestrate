@@ -40,6 +40,9 @@ export class Campaign {
     @JoinColumn({ name: "workflow_id" })
     workflow?: Workflow;
 
+    @Column({ name: "scheduled_at", type: "timestamptz", nullable: true })
+    scheduledAt?: Date | null;
+
     @Column({ type: "varchar", length: 50, default: "draft" })
     status!: string;
 
