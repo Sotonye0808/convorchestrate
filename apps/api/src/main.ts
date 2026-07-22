@@ -6,12 +6,27 @@ import helmet from "@fastify/helmet";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import { AppModule } from "./app.module";
+import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(
         AppModule,
         new FastifyAdapter({ logger: true }),
     );
+
+    app.useGlobalFilters(new AllExceptionsFilter());
+
+    const instance = app.getHttpAdapter().getInstance();
+
+    // Capture raw body for webhook HMAC-SHA256 signature verification
+    instance.addHook("preParsing", function (request: any, _reply: any, payload: any, done: any) {
+        const chunks: Buffer[] = [];
+        payload.on("data", (chunk: Buffer) => chunks.push(chunk));
+        payload.on("end", () => {
+            request.rawBody = Buffer.concat(chunks).toString("utf-8");
+        });
+        done();
+    });
 
     app.setGlobalPrefix("api");
 

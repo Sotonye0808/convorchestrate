@@ -3,11 +3,10 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package.json turbo.json tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
-COPY apps/worker/package.json apps/worker/package.json
 COPY packages/*/package.json packages/*/package.json
 RUN npm ci
 COPY . .
-RUN npx turbo run build --filter=api...
+RUN npx turbo run build --filter=api
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -18,5 +17,5 @@ COPY --from=builder --chown=appuser:nodejs /app/apps/api/package.json ./package.
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=appuser:nodejs /app/packages ./packages
 USER appuser
-EXPOSE 3000
+EXPOSE 8080
 CMD ["node", "dist/main.js"]

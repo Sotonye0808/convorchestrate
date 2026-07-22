@@ -1,5 +1,5 @@
 import type { Action } from "@convorchestrate/schemas";
-import type { SessionState } from "@convorchestrate/memory";
+import type { SessionState } from "./types";
 import type { EngineContext } from "./engine";
 
 export interface ActionExecutor {
@@ -21,6 +21,7 @@ export class DefaultActionExecutor implements ActionExecutor {
                 return;
 
             case "send_message":
+            case "send_template_message":
             case "tag_user":
             case "store_media":
             case "trigger_webhook":

@@ -1,32 +1,27 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { RedisMemoryProvider } from "@convorchestrate/memory";
+import { InMemoryProvider } from "@convorchestrate/core";
 import { Tenant } from "../../entities/tenant.entity";
 import { ContactTag } from "../../entities/contact-tag.entity";
 import { Media } from "../../entities/media.entity";
 import { MediationSession } from "../../entities/mediation-session.entity";
 import { Contact } from "../../entities/contact.entity";
+import { WATemplate } from "../../entities/wa-template.entity";
 import { EngineService } from "./engine.service";
+import { QueueModule } from "../queue/queue.module";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Tenant, ContactTag, Media, MediationSession, Contact]),
-        ConfigModule,
+        TypeOrmModule.forFeature([Tenant, ContactTag, Media, MediationSession, Contact, WATemplate]),
+        QueueModule,
     ],
     providers: [
         {
-            provide: RedisMemoryProvider,
-            useFactory: (configService: ConfigService) => {
-                return new RedisMemoryProvider({
-                    redisUrl: configService.getOrThrow<string>("REDIS_URL"),
-                    keyPrefix: "convorchestrate",
-                });
-            },
-            inject: [ConfigService],
+            provide: InMemoryProvider,
+            useFactory: () => new InMemoryProvider(),
         },
         EngineService,
     ],
-    exports: [EngineService, RedisMemoryProvider],
+    exports: [EngineService],
 })
 export class EngineModule { }

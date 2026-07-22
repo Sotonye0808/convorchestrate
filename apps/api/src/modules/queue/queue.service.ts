@@ -23,7 +23,12 @@ export interface WebhookTriggerJob {
     traceId: string;
 }
 
-export type QueueJobType = WorkflowExecutionJob | DelayedMessageJob | WebhookTriggerJob;
+export interface CampaignLaunchJob {
+    campaignId: string;
+    tenantId: string;
+}
+
+export type QueueJobType = WorkflowExecutionJob | DelayedMessageJob | WebhookTriggerJob | CampaignLaunchJob;
 
 export type JobHandler<T extends QueueJobType> = (job: T) => Promise<void>;
 
@@ -35,14 +40,17 @@ export class QueueService implements OnModuleDestroy {
     readonly workflowQueue: Queue<WorkflowExecutionJob>;
     readonly delayedQueue: Queue<DelayedMessageJob>;
     readonly webhookQueue: Queue<WebhookTriggerJob>;
+    readonly campaignQueue: Queue<CampaignLaunchJob>;
 
     private workflowWorker: Worker<WorkflowExecutionJob> | null = null;
     private delayedWorker: Worker<DelayedMessageJob> | null = null;
     private webhookWorker: Worker<WebhookTriggerJob> | null = null;
+    private campaignWorker: Worker<CampaignLaunchJob> | null = null;
 
     private workflowHandler: JobHandler<WorkflowExecutionJob> | null = null;
     private delayedHandler: JobHandler<DelayedMessageJob> | null = null;
     private webhookHandler: JobHandler<WebhookTriggerJob> | null = null;
+    private campaignHandler: JobHandler<CampaignLaunchJob> | null = null;
 
     constructor(
         private readonly configService: ConfigService,
@@ -82,6 +90,15 @@ export class QueueService implements OnModuleDestroy {
                 removeOnFail: 50,
             },
         });
+
+        this.campaignQueue = new Queue<CampaignLaunchJob>("campaign-launch", {
+            connection: this.connection,
+            defaultJobOptions: {
+                attempts: 3,
+                backoff: { type: "fixed", delay: 10000 },
+                removeOnComplete: 100,
+            },
+        });
     }
 
     onWorkflow(job: Job<WorkflowExecutionJob>): Promise<void> {
@@ -94,6 +111,10 @@ export class QueueService implements OnModuleDestroy {
 
     onWebhook(job: Job<WebhookTriggerJob>): Promise<void> {
         return this.processJob(job, this.webhookHandler, "webhook");
+    }
+
+    onCampaign(job: Job<CampaignLaunchJob>): Promise<void> {
+        return this.processJob(job, this.campaignHandler, "campaign");
     }
 
     private async processJob<T extends QueueJobType>(
@@ -128,6 +149,11 @@ export class QueueService implements OnModuleDestroy {
 
     setWebhookHandler(handler: JobHandler<WebhookTriggerJob>): void {
         this.webhookHandler = handler;
+        this.startWorkers();
+    }
+
+    setCampaignHandler(handler: JobHandler<CampaignLaunchJob>): void {
+        this.campaignHandler = handler;
         this.startWorkers();
     }
 
@@ -173,6 +199,20 @@ export class QueueService implements OnModuleDestroy {
                 });
             });
         }
+
+        if (!this.campaignWorker && this.campaignHandler) {
+            this.campaignWorker = new Worker<CampaignLaunchJob>(
+                "campaign-launch",
+                (job) => this.onCampaign(job),
+                { connection: this.connection },
+            );
+            this.campaignWorker.on("failed", (job, err) => {
+                this.logger.error("campaign_worker_failed", {
+                    jobId: job?.id,
+                    error: err.message,
+                });
+            });
+        }
     }
 
     async onModuleDestroy(): Promise<void> {
@@ -180,9 +220,11 @@ export class QueueService implements OnModuleDestroy {
             this.workflowWorker?.close(),
             this.delayedWorker?.close(),
             this.webhookWorker?.close(),
+            this.campaignWorker?.close(),
             this.workflowQueue.close(),
             this.delayedQueue.close(),
             this.webhookQueue.close(),
+            this.campaignQueue.close(),
         ]);
     }
 }

@@ -60,10 +60,12 @@ export interface Action {
     value?: unknown;
     to_party?: string;
     next_step?: string;
+    template_params?: string[];
 }
 
 export type ActionType =
     | "send_message"
+    | "send_template_message"
     | "tag_user"
     | "store_media"
     | "trigger_webhook"
@@ -155,6 +157,7 @@ export const workflowConfigSchema: Record<string, unknown> = {
                 type: {
                     enum: [
                         "send_message",
+                        "send_template_message",
                         "tag_user",
                         "store_media",
                         "trigger_webhook",
@@ -180,6 +183,7 @@ export const workflowConfigSchema: Record<string, unknown> = {
                 value: {},
                 to_party: { type: "string" },
                 next_step: { type: "string" },
+                template_params: { type: "array", items: { type: "string" } },
             },
         },
         party: {

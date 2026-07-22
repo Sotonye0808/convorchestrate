@@ -8,7 +8,6 @@ import { Workflow } from "../../entities/workflow.entity";
 import { Session } from "../../entities/session.entity";
 import { AdminUser } from "../../entities/admin-user.entity";
 import { QueueService } from "../queue/queue.service";
-import { normalizeMessage } from "../messaging/message-normalizer";
 import { randomUUID } from "crypto";
 import * as bcrypt from "bcrypt";
 
@@ -84,13 +83,6 @@ export class DemoService {
         }
 
         const traceId = randomUUID();
-        const raw = {
-            from: phone,
-            body: data.text,
-            type: data.type ?? "chat",
-            timestamp: Math.floor(Date.now() / 1000),
-            raw: {},
-        };
 
         const config = workflowEntity.config as unknown as WorkflowConfig;
         await this.queueService.workflowQueue.add("process", {
@@ -100,7 +92,12 @@ export class DemoService {
                 contactId: contact.id,
                 sessionId,
                 traceId,
-                incomingMessage: normalizeMessage(raw as any),
+                incomingMessage: {
+                    type: data.type ?? "text",
+                    text: data.text,
+                    timestamp: new Date(),
+                    raw: {},
+                },
             },
         });
 
