@@ -2,8 +2,8 @@
 
 > **Metadata**
 >
-> - last-updated-by: update-ai-system (R2 sync)
-> - last-verified-against-code: 2026-07-01
+> - last-updated-by: update-ai-system
+> - last-verified-against-code: 2026-07-22
 > - staleness-policy: append-only — never modify past entries
 
 > **Overview:** Append-only running log of development sessions. Each entry records what was completed, what comes next, and which files were modified. Agents write here at the end of every session so work can be resumed without re-reading the entire codebase. This file is the **append-only historical record** — use `checkpoints/in-progress.md` for current in-progress work.
@@ -358,3 +358,24 @@ R5 — Config-Driven Workflow Integration. Port workflow JSON schema, create pac
 **Notes / Blockers:**
 - 51/51 tests pass (19 meta-api + 13 core + 19 api)
 - R4 complete except tenant-scoped MetaApiClient wiring (deferred to hardening phase)
+
+## Session 16 — 2026-07-22
+
+**Completed:**
+R10 — ai-system update and GitHub workflows setup. Installed opencode GitHub Action workflow from default-template. Ran update-ai-system to sync freshness metadata. Added MIGRATION.md for future v1→v2 migration reference. All R1-R9 phases remain fully complete.
+
+**Files Modified:**
+- .github/workflows/opencode.yml — (NEW) opencode local trigger workflow
+- MIGRATION.md — (NEW) v1→v2 migration guide
+- .gitignore — added ai-system entries
+- ai-system/ (entire directory) — freshness metadata updated to 2026-07-22
+
+**Next Task:**
+All phases complete. Project is ready for production deployment and maintenance.
+
+**Assumptions Made:**
+None.
+
+**Notes / Blockers:**
+- opencode workflow delegates to sotonye-dagogo-dev/.github-workflows — ensure this repo is accessible
+- No .ai-system outdated directory found; current ai-system is already v2

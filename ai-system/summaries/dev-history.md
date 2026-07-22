@@ -2,8 +2,8 @@
 
 > **Metadata**
 >
-> - last-updated-by: execute-feature (R6 sync)
-> - last-verified-against-code: 2026-07-14
+> - last-updated-by: update-ai-system
+> - last-verified-against-code: 2026-07-22
 > - staleness-policy: historical entries do not go stale
 
 > **Overview:** Chronological log of completed development work. Each sprint ends with a summary entry. Agents add entries after completing tasks. Useful for understanding what has been built, when decisions were made, and what patterns have emerged.
@@ -323,6 +323,25 @@ Completed the final project phase. Updated README.md with project description, a
 **Build & Test:**
 - 5/5 packages build
 - 34/34 tests pass
+
+**Next Sprint Focus:**
+All phases complete. Project is ready for production deployment and maintenance.
+
+## 2026-07-22 — R10 ai-system Update & GitHub Workflows
+
+**Summary:**
+Installed opencode GitHub Actions workflow from the default-template repository. Ran update-ai-system to synchronize freshness metadata across all ai-system files. Added MIGRATION.md for future v1→v2 upgrade reference. Updated .gitignore with ai-system entries. Verified current ai-system is already v2 — no outdated .ai-system found.
+
+**Completed:**
+- Created .github/workflows/opencode.yml — opencode local trigger (design + dev pipelines)
+- Created MIGRATION.md — v1→v2 migration guide for future reference
+- Updated .gitignore with config.yaml, .stdout, .continue, ai-system-v1-backup/
+- Updated freshness metadata across all ai-system files to 2026-07-22
+- Updated session-log and dev-history with this entry
+
+**Key Changes:**
+- opencode workflow enables /oc and /design commands from issue/PR comments
+- Delegates to sotonye-dagogo-dev/.github-workflows central runner
 
 **Next Sprint Focus:**
 All phases complete. Project is ready for production deployment and maintenance.

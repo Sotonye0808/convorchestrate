@@ -2,8 +2,8 @@
 
 > **Metadata**
 >
-> - last-updated-by: R2-meta-api-refactor
-> - last-verified-against-code: 2026-07-01
+> - last-updated-by: update-ai-system
+> - last-verified-against-code: 2026-07-22
 > - staleness-policy: re-verify before trusting if project structure has changed
 
 > **Overview:** Project overview — the very first file any AI agent should read. Provides a 30-second orientation to what this project is, what stack it uses, and where to find everything.

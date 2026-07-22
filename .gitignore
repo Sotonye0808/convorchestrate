@@ -44,3 +44,9 @@ temp/
 
 # Vite cache
 .vite/
+
+# AI system
+config.yaml
+.stdout
+.continue
+ai-system-v1-backup/
